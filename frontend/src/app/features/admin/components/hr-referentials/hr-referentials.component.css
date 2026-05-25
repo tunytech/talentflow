@@ -1,0 +1,171 @@
+.hr-ref-container {
+  width: 100%;
+}
+
+.hr-ref-navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.hr-ref-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.hr-ref-grid-wide {
+  grid-template-columns: minmax(320px, 400px) 1fr;
+}
+
+@media (max-width: 900px) {
+  .hr-ref-grid,
+  .hr-ref-grid-wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-glass-inner {
+  padding: 1rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+}
+
+.hr-ref-form h5,
+.hr-ref-form h6 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.hr-ref-list {
+  overflow-x: auto;
+}
+
+.data-table.compact {
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.data-table.compact th,
+.data-table.compact td {
+  padding: 0.5rem 0.65rem;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background: var(--hover-bg, rgba(255, 255, 255, 0.05));
+}
+
+.selected-row {
+  background: var(--primary-muted, rgba(99, 102, 241, 0.15)) !important;
+}
+
+.actions-cell {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.9rem;
+}
+
+.btn-icon.danger:hover {
+  opacity: 0.8;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.badge-ok {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.badge-off {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.flex-center {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.25rem;
+}
+
+.skill-link-add-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.skill-link-add-row .form-select {
+  flex: 1;
+  min-width: 140px;
+}
+
+.skill-links-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skill-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.skill-link-name {
+  flex: 1;
+  min-width: 100px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.select-xs {
+  width: 4rem;
+  padding: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.checkbox-xs {
+  font-size: 0.75rem;
+}
+
+.skill-tag {
+  font-size: 0.8rem;
+}
+
+.mandatory-star {
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+.ml-3 {
+  margin-left: 1rem;
+}

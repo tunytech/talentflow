@@ -1,0 +1,395 @@
+/* Global Design System for Talentflow */
+
+:root {
+  /* Common typography and sizing */
+  --font-family: 'Outfit', sans-serif;
+  --transition-speed: 0.3s;
+  --border-radius-sm: 8px;
+  --border-radius-md: 14px;
+  --border-radius-lg: 20px;
+  --border-radius-pill: 9999px;
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* 1. MIDNIGHT TECH (Sleek Dark Theme) */
+[data-theme="midnight-tech"] {
+  --bg-primary: #0a0f1d;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  --color-primary: #8b5cf6; /* Electric Violet */
+  --color-primary-rgb: 139, 92, 246;
+  --color-secondary: #06b6d4; /* Cyan */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  --border-color: #374151;
+  --border-color-soft: #1f2937;
+  
+  --glass-bg: rgba(17, 24, 39, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  
+  --sidebar-bg: #090d16;
+  --sidebar-hover: #1e1b4b;
+  --header-bg: rgba(10, 15, 29, 0.85);
+  
+  --scrollbar-track: #0d111c;
+  --scrollbar-thumb: #374151;
+  --scrollbar-thumb-hover: #4b5563;
+}
+
+/* 2. CORPORATE PURE (Elegant Light Theme) */
+[data-theme="corporate-pure"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --color-primary: #2563eb; /* Royal Blue */
+  --color-primary-rgb: 37, 99, 235;
+  --color-secondary: #0d9488; /* Teal */
+  --color-success: #16a34a;
+  --color-warning: #ea580c;
+  --color-danger: #dc2626;
+  
+  --border-color: #e2e8f0;
+  --border-color-soft: #f1f5f9;
+  
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #eff6ff;
+  --header-bg: rgba(248, 250, 252, 0.85);
+  
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+}
+
+/* 3. EMERALD ECO (Forest Light Theme) */
+[data-theme="emerald-eco"] {
+  --bg-primary: #fbfcfa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f2f4f0;
+  --text-primary: #1c2e24;
+  --text-secondary: #4f6b5c;
+  --text-muted: #8ba395;
+  
+  --color-primary: #15803d; /* Forest Green */
+  --color-primary-rgb: 21, 128, 61;
+  --color-secondary: #b45309; /* Warm Gold/Amber */
+  --color-success: #16a34a;
+  --color-warning: #ea580c;
+  --color-danger: #dc2626;
+  
+  --border-color: #e1e7de;
+  --border-color-soft: #f2f4f0;
+  
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(21, 128, 61, 0.08);
+  
+  --sidebar-bg: #f5f7f3;
+  --sidebar-hover: #e8ede3;
+  --header-bg: rgba(251, 252, 250, 0.85);
+  
+  --scrollbar-track: #f2f4f0;
+  --scrollbar-thumb: #cbd2c6;
+  --scrollbar-thumb-hover: #a1ae9b;
+}
+
+/* 4. SUNSET GLOW (Warm Charcoal Dark Theme) */
+[data-theme="sunset-glow"] {
+  --bg-primary: #121214;
+  --bg-secondary: #1a1a1e;
+  --bg-tertiary: #26262b;
+  --text-primary: #f5f5f7;
+  --text-secondary: #a0a0a5;
+  --text-muted: #6e6e73;
+  
+  --color-primary: #ea580c; /* Sunset Coral */
+  --color-primary-rgb: 234, 88, 12;
+  --color-secondary: #f59e0b; /* Amber */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  --border-color: #2a2a30;
+  --border-color-soft: #1e1e24;
+  
+  --glass-bg: rgba(26, 26, 30, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  
+  --sidebar-bg: #0d0d0e;
+  --sidebar-hover: #2d1a10;
+  --header-bg: rgba(18, 18, 20, 0.85);
+  
+  --scrollbar-track: #0d0d0e;
+  --scrollbar-thumb: #2a2a30;
+  --scrollbar-thumb-hover: #3e3e46;
+}
+
+/* 5. ROYAL AMETHYST (Plum Dark Theme) */
+[data-theme="royal-amethyst"] {
+  --bg-primary: #120e1a;
+  --bg-secondary: #1a1426;
+  --bg-tertiary: #271f38;
+  --text-primary: #f4f2f7;
+  --text-secondary: #a69bb8;
+  --text-muted: #726685;
+  
+  --color-primary: #c084fc; /* Bright Amethyst */
+  --color-primary-rgb: 192, 132, 252;
+  --color-secondary: #ec4899; /* Pink */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  
+  --border-color: #34284b;
+  --border-color-soft: #211930;
+  
+  --glass-bg: rgba(26, 20, 38, 0.7);
+  --glass-border: rgba(192, 132, 252, 0.1);
+  
+  --sidebar-bg: #0c0912;
+  --sidebar-hover: #2b123d;
+  --header-bg: rgba(18, 14, 26, 0.85);
+  
+  --scrollbar-track: #0c0912;
+  --scrollbar-thumb: #34284b;
+  --scrollbar-thumb-hover: #4c3b6d;
+}
+
+/* Global Reset & Base Styling */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--border-radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Premium Layout Grid */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Glassmorphism card template */
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-glass);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color var(--transition-speed) ease;
+}
+
+.card-glass:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(0,0,0,0.25);
+  border-color: rgba(var(--color-primary-rgb), 0.3);
+}
+
+/* Premium Forms & Inputs */
+.form-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-input, .form-select, .form-textarea {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  width: 100%;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 85%, #ffffff);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Tables style */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.premium-table th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.premium-table td {
+  padding: 1rem 1.25rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border-color-soft);
+  transition: background-color 0.2s ease;
+}
+
+.premium-table tr:last-child td {
+  border-bottom: none;
+}
+
+.premium-table tbody tr:hover td {
+  background-color: rgba(var(--color-primary-rgb), 0.03);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-pill);
+}
+
+.badge-primary {
+  background-color: rgba(var(--color-primary-rgb), 0.15);
+  color: var(--color-primary);
+}
+
+.badge-success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+}

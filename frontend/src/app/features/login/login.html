@@ -1,0 +1,453 @@
+<!-- 
+  =========================================================================
+  INTERFACE D'AUTHENTIFICATION PREMIUM & ULTRA-MODERNE - TALENTFLOW
+  =========================================================================
+  Ce code HTML construit une interface visuelle de connexion incroyable, avec des effets de transparence
+  (effet verre ou "glassmorphism"), des formes colorées et lumineuses qui flottent en arrière-plan,
+  et des formulaires réactifs et sécurisés pour l'utilisateur.
+-->
+
+<div class="login-wrapper">
+  <!-- 
+    ORBES LUMINEUSES (EFFET DE FOND MAGIQUE) :
+    Ces trois cercles colorés et floutés flottent et bougent en arrière-plan pour créer 
+    une esthétique technologique haut de gamme et futuriste.
+  -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- 
+    BARRE SUPÉRIEURE DE NAVIGATION RAPIDE :
+    Elle contient le sélecteur de langue en haut à droite pour que l'utilisateur 
+    puisse choisir sa langue (Français, English, Deutsch, Nederlands) avant même de se connecter.
+  -->
+  <header class="login-header">
+    <div class="logo-box">
+      <img src="/logo.png" class="header-logo-img" alt="Talentflow Logo" />
+      <span class="logo-text">Talentflow</span>
+    </div>
+    
+    <!-- Sélecteur de langue interactif en verre poli avec drapeaux HD (FlagCDN) !
+         Il affiche de vraies images de drapeaux de pays sur Windows et permet 
+         un basculement dynamique et fluide d'un simple clic. -->
+    <div class="language-dropdown-container">
+      <button 
+        type="button"
+        class="custom-lang-trigger" 
+        (click)="toggleLangDropdown(); $event.stopPropagation()"
+        title="Choisir la langue de l'application">
+        <img 
+          [src]="translationService.languages.find(l => l.code === translationService.currentLanguage())?.flagUrl" 
+          alt="Drapeau de la langue active" 
+          class="lang-flag-img" />
+        <span class="lang-label-text">
+          {{ translationService.languages.find(l => l.code === translationService.currentLanguage())?.name }}
+        </span>
+        <span class="custom-arrow">▼</span>
+      </button>
+
+      <!-- Liste des langues disponibles sous forme de menu déroulant suspendu -->
+      <div class="custom-lang-menu card-glass animate-pop" *ngIf="isLangDropdownOpen()">
+        <button 
+          type="button"
+          class="custom-lang-option" 
+          *ngFor="let lang of translationService.languages" 
+          (click)="selectLanguage(lang.code)">
+          <img [src]="lang.flagUrl" alt="Drapeau {{ lang.name }}" class="lang-flag-img" />
+          <span class="lang-option-text">{{ lang.name }}</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEUR PRINCIPAL DE LA CARTE DE SÉCURITÉ -->
+  <main class="login-card-container">
+    <div class="login-glass-card">
+      
+      <!-- =========================================================================
+           AFFICHAGE DES MESSAGES D'ALERTES (TOASTS EN HAUT DE LA CARTE)
+           ========================================================================= -->
+      
+      <!-- Message d'erreur (Rouge vif) en cas de mot de passe incorrect ou règle non respectée -->
+      @if (errorMessage()) {
+        <div class="alert-box alert-error animate-pop">
+          <span class="alert-icon">❌</span>
+          <span class="alert-text">{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Message de succès (Vert émeraude) pour confirmer les changements -->
+      @if (successMessage()) {
+        <div class="alert-box alert-success animate-pop">
+          <span class="alert-icon">✅</span>
+          <span class="alert-text">{{ successMessage() }}</span>
+        </div>
+      }
+
+      <!-- 
+        =========================================================================
+        PANNEAU 1 : ÉCRAN DE CONNEXION NORMAL (VIEW === 'LOGIN')
+        =========================================================================
+      -->
+      @if (view === 'login') {
+        <div class="form-view animate-fade">
+          <div class="card-intro">
+            <div class="logo-container">
+              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+            </div>
+            <h2>{{ translationService.translate('auth_login') }}</h2>
+            <p class="slogan">{{ translationService.translate('auth_slogan') }}</p>
+          </div>
+
+          <form (submit)="onLogin($event)" class="form-body">
+            <!-- Champ Identifiant (E-mail ou Pseudo) -->
+            <div class="input-group">
+              <label for="username">{{ translationService.translate('auth_username') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">👤</span>
+                <input 
+                  type="text" 
+                  id="username" 
+                  [(ngModel)]="username" 
+                  name="username" 
+                  placeholder="admin ou admin@tunytech.com"
+                  required
+                  autocomplete="username" />
+              </div>
+            </div>
+
+            <!-- Champ Mot de passe secret -->
+            <div class="input-group">
+              <label for="password">{{ translationService.translate('auth_password') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">🔒</span>
+                <input 
+                  type="password" 
+                  id="password" 
+                  [(ngModel)]="password" 
+                  name="password" 
+                  placeholder="••••••••••••"
+                  required
+                  autocomplete="current-password" />
+              </div>
+            </div>
+
+            <!-- Lien pour réinitialiser le mot de passe s'il a été oublié -->
+            <div class="forgot-pwd-link-box">
+              <a href="#" (click)="switchView('forgot')" class="forgot-link">
+                {{ translationService.translate('auth_forgot') }}
+              </a>
+            </div>
+
+            <!-- Grand bouton de connexion avec dégradé et micro-animation -->
+            <button type="submit" class="btn-gradient-submit">
+              <span>{{ translationService.translate('auth_login') }}</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </form>
+        </div>
+      }
+
+      <!-- 
+        =========================================================================
+        PANNEAU 2 : DEMANDE DE RÉCUPÉRATION DE MOT DE PASSE (VIEW === 'FORGOT')
+        =========================================================================
+      -->
+      @if (view === 'forgot') {
+        <div class="form-view animate-fade">
+          <div class="card-intro">
+            <div class="logo-container">
+              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+            </div>
+            <h2>{{ translationService.translate('auth_forgot_title') }}</h2>
+            <p class="slogan">{{ translationService.translate('auth_forgot_subtitle') }}</p>
+          </div>
+
+          <form (submit)="onForgot($event)" class="form-body">
+            <!-- Saisie de l'adresse e-mail -->
+            <div class="input-group">
+              <label for="forgot-email">{{ translationService.translate('col_email') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">✉️</span>
+                <input 
+                  type="email" 
+                  id="forgot-email" 
+                  [(ngModel)]="email" 
+                  name="forgot-email" 
+                  placeholder="votre-email@tunytech.com"
+                  required
+                  autocomplete="email" />
+              </div>
+            </div>
+
+            <!-- Bouton pour demander le code secret de 6 chiffres -->
+            <button type="submit" class="btn-gradient-submit">
+              <span>{{ translationService.translate('auth_get_code') }}</span>
+              <span class="btn-arrow">✉️</span>
+            </button>
+
+            <!-- Retourner en arrière -->
+            <div class="back-action-box">
+              <a href="#" (click)="switchView('login')" class="back-link">
+                ← {{ translationService.translate('auth_back_login') }}
+              </a>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- 
+        =========================================================================
+        PANNEAU 3 : RÉINITIALISATION FINALE DU MOT DE PASSE (VIEW === 'RESET')
+        =========================================================================
+      -->
+      @if (view === 'reset') {
+        <div class="form-view animate-fade">
+          <div class="card-intro">
+            <div class="logo-container">
+              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+            </div>
+            <h2>{{ translationService.translate('auth_reset_title') }}</h2>
+            <p class="slogan">{{ translationService.translate('auth_reset_subtitle') }}</p>
+          </div>
+
+          <form (submit)="onReset($event)" class="form-body">
+            <!-- Entrée du code secret envoyé -->
+            <div class="input-group">
+              <label for="reset-token">{{ translationService.translate('auth_code') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">🔑</span>
+                <input 
+                  type="text" 
+                  id="reset-token" 
+                  [(ngModel)]="token" 
+                  name="reset-token" 
+                  placeholder="Ex: 123456"
+                  maxlength="6"
+                  required />
+              </div>
+            </div>
+
+            <!-- Saisie du nouveau mot de passe fort -->
+            <div class="input-group">
+              <label for="reset-new-password">{{ translationService.translate('auth_new_password') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">🔒</span>
+                <input 
+                  type="password" 
+                  id="reset-new-password" 
+                  [ngModel]="newPassword()" 
+                  (ngModelChange)="newPassword.set($event)" 
+                  name="reset-new-password" 
+                  placeholder="Nouveau mot de passe"
+                  required />
+              </div>
+            </div>
+ 
+            <!-- Confirmation -->
+            <div class="input-group">
+              <label for="reset-confirm-password">{{ translationService.translate('auth_confirm_password') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">✔️</span>
+                <input 
+                  type="password" 
+                  id="reset-confirm-password" 
+                  [ngModel]="confirmPassword()" 
+                  (ngModelChange)="confirmPassword.set($event)" 
+                  name="reset-confirm-password" 
+                  placeholder="Confirmer mot de passe"
+                  required />
+              </div>
+            </div>
+
+            <!-- 
+              =========================================================================
+              VISUEL D'ANALYSE DE MOT DE PASSE (CRITÈRES EN TEMPS RÉEL)
+              =========================================================================
+            -->
+            <div class="password-safety-box">
+              
+              <!-- Alerte Warning Jaune si le mot de passe est configuré à moins de 8 caractères -->
+              @if (minPasswordLength() < 8) {
+                <div class="warning-alert-box animate-pop">
+                  {{ translationService.translate('auth_warning_8') }}
+                </div>
+              }
+
+              <!-- Indicateur de force graphique (barre de chargement multicolore) -->
+              <div class="strength-bar-container">
+                <div class="strength-bar" [style.width.%]="passwordStrengthPercent()" [className]="'strength-bar ' + strengthColorClass()"></div>
+              </div>
+
+              <!-- Liste des critères avec des cases à cocher animées (Vert pour OK, Gris pour manquant) -->
+              <ul class="criteria-list">
+                <li [class.valid]="isLengthValid()">
+                  <span class="bullet">{{ isLengthValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_len') }} ({{ minPasswordLength() }} min)</span>
+                </li>
+                <li [class.valid]="isCapitalValid()">
+                  <span class="bullet">{{ isCapitalValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_case') }}</span>
+                </li>
+                <li [class.valid]="isDigitValid()">
+                  <span class="bullet">{{ isDigitValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_num') }}</span>
+                </li>
+                <li [class.valid]="isSpecialValid()">
+                  <span class="bullet">{{ isSpecialValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_spec') }}</span>
+                </li>
+                <li [class.valid]="isMatchValid()">
+                  <span class="bullet">{{ isMatchValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">Mots de passe identiques</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Validation -->
+            <button type="submit" class="btn-gradient-submit" [disabled]="!isLengthValid() || !isCapitalValid() || !isDigitValid() || !isSpecialValid() || !isMatchValid()">
+              <span>{{ translationService.translate('auth_reset_btn') }}</span>
+              <span class="btn-arrow">✓</span>
+            </button>
+
+            <!-- Retourner à la connexion -->
+            <div class="back-action-box">
+              <a href="#" (click)="switchView('login')" class="back-link">
+                ← {{ translationService.translate('auth_back_login') }}
+              </a>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- 
+        =========================================================================
+        PANNEAU 4 : CHANGEMENT OBLIGATOIRE DE MOT DE PASSE (VIEW === 'FORCECHANGE')
+        =========================================================================
+      -->
+      @if (view === 'forceChange') {
+        <div class="form-view animate-fade">
+          <div class="card-intro">
+            <div class="logo-container">
+              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+            </div>
+            <h2>{{ translationService.translate('auth_force_title') }}</h2>
+            <p class="slogan">{{ translationService.translate('auth_force_subtitle') }}</p>
+          </div>
+
+          <!-- Boîte d'information sur les critères de sécurité -->
+          <div class="info-bubble">
+            ℹ️ Par mesure de sécurité pour votre compte, vous devez obligatoirement choisir un nouveau mot de passe secret qui respecte nos règles.
+          </div>
+
+          <form (submit)="onForceChange($event)" class="form-body">
+            <!-- Nouveau mot de passe -->
+            <div class="input-group">
+              <label for="force-new-password">{{ translationService.translate('auth_new_password') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">🔒</span>
+                <input 
+                  type="password" 
+                  id="force-new-password" 
+                  [ngModel]="newPassword()" 
+                  (ngModelChange)="newPassword.set($event)" 
+                  name="force-new-password" 
+                  placeholder="Choisissez votre mot de passe"
+                  required />
+              </div>
+            </div>
+
+            <!-- Confirmer mot de passe -->
+            <div class="input-group">
+              <label for="force-confirm-password">{{ translationService.translate('auth_confirm_password') }}</label>
+              <div class="input-icon-wrapper">
+                <span class="input-icon">✔️</span>
+                <input 
+                  type="password" 
+                  id="force-confirm-password" 
+                  [ngModel]="confirmPassword()" 
+                  (ngModelChange)="confirmPassword.set($event)" 
+                  name="force-confirm-password" 
+                  placeholder="Ressaisissez le mot de passe"
+                  required />
+              </div>
+            </div>
+
+            <!-- 
+              =========================================================================
+              CRITÈRES DE VALIDATION DU MOT DE PASSE OBLIGATOIRE
+              =========================================================================
+            -->
+            <div class="password-safety-box">
+              
+              <!-- Alerte Warning Jaune si le mot de passe est configuré à moins de 8 caractères -->
+              @if (minPasswordLength() < 8) {
+                <div class="warning-alert-box animate-pop">
+                  {{ translationService.translate('auth_warning_8') }}
+                </div>
+              }
+
+              <!-- Indicateur de force graphique -->
+              <div class="strength-bar-container">
+                <div class="strength-bar" [style.width.%]="passwordStrengthPercent()" [className]="'strength-bar ' + strengthColorClass()"></div>
+              </div>
+
+              <!-- Liste des critères dynamiques -->
+              <ul class="criteria-list">
+                <li [class.valid]="isLengthValid()">
+                  <span class="bullet">{{ isLengthValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_len') }} ({{ minPasswordLength() }} min)</span>
+                </li>
+                <li [class.valid]="isCapitalValid()">
+                  <span class="bullet">{{ isCapitalValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_case') }}</span>
+                </li>
+                <li [class.valid]="isDigitValid()">
+                  <span class="bullet">{{ isDigitValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_num') }}</span>
+                </li>
+                <li [class.valid]="isSpecialValid()">
+                  <span class="bullet">{{ isSpecialValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_spec') }}</span>
+                </li>
+                <li [class.valid]="isPersonalNameValid()">
+                  <span class="bullet">{{ isPersonalNameValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">{{ translationService.translate('auth_rule_name') }}</span>
+                </li>
+                <li [class.valid]="isMatchValid()">
+                  <span class="bullet">{{ isMatchValid() ? '✓' : '○' }}</span>
+                  <span class="criteria-label">Mots de passe identiques</span>
+                </li>
+                <li>
+                  <span class="bullet">○</span>
+                  <span class="criteria-label text-muted">{{ translationService.translate('auth_rule_hist') }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Soumission (Désactivée tant que tout n'est pas OK) -->
+            <button type="submit" class="btn-gradient-submit" [disabled]="!isLengthValid() || !isCapitalValid() || !isDigitValid() || !isSpecialValid() || !isPersonalNameValid() || !isMatchValid()">
+              <span>{{ translationService.translate('auth_reset_btn') }}</span>
+              <span class="btn-arrow">✓</span>
+            </button>
+
+            <!-- Retourner en arrière -->
+            <div class="back-action-box">
+              <a href="#" (click)="switchView('login')" class="back-link">
+                ← {{ translationService.translate('auth_back_login') }}
+              </a>
+            </div>
+          </form>
+        </div>
+      }
+
+    </div>
+  </main>
+
+  <!-- PIED DE PAGE DE SÉCURITÉ -->
+  <footer class="login-footer">
+    <p>© 2026 Tunytech Business • Talentflow. Tous droits réservés.</p>
+    <p class="encryption-note">🔐 Cryptage militaire AES-256 de bout en bout actif.</p>
+  </footer>
+</div>

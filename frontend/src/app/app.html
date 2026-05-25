@@ -1,0 +1,15 @@
+<!-- 
+  =========================================================================
+  BOÎTE D'AIGUILLAGE DE L'APPLICATION (ROUTAGE DYNAMIQUE)
+  =========================================================================
+  Nous écoutons l'interrupteur magique "authService.currentUser()".
+  - S'il n'y a personne (c'est-à-dire que c'est "null"), on affiche l'écran de Connexion (app-login).
+  - Dès que quelqu'un se connecte avec succès, l'interrupteur contient ses infos, et on lui 
+    ouvre grand les portes de l'espace de gestion et d'administration (app-admin) !
+-->
+
+@if (authService.currentUser() === null) {
+  <app-login></app-login>
+} @else {
+  <app-admin></app-admin>
+}

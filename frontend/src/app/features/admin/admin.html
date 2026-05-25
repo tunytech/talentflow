@@ -1,0 +1,855 @@
+<div class="app-container" [attr.data-theme]="themeService.currentThemeName()">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="isSidebarCollapsed()">
+    <div class="sidebar-header">
+      <!-- 
+        LOGOTECH INTERACTIVE DANS LA SIDEBAR :
+        Si l'utilisateur connecté possède le logo de son entreprise active, nous l'affichons en haut de la sidebar.
+        Sinon, nous gardons l'icône moderne 💠 par défaut.
+      -->
+      <div class="logo-icon-wrapper">
+        <img *ngIf="authService.currentUser()?.logo" [src]="authService.currentUser()?.logo" class="sidebar-logo-img" alt="logo" />
+        <img *ngIf="!authService.currentUser()?.logo" src="/logo.png" class="sidebar-logo-img" alt="logo" />
+      </div>
+      <div class="logo-texts" *ngIf="!isSidebarCollapsed()">
+        <span class="logo-text">Talentflow</span>
+        <span class="logo-subtext">{{ authService.currentUser()?.companyName || 'Tunytech Holdings' }}</span>
+      </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a class="nav-item active" (click)="setActiveTab('companies')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed()">{{ t('nav_admin') }}</span>
+      </a>
+      <a class="nav-item" (click)="setActiveTab('priority')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed()">{{ t('nav_dashboard') }}</span>
+      </a>
+    </nav>
+    
+    <div class="sidebar-toggle" (click)="toggleSidebar()">
+      <span>{{ isSidebarCollapsed() ? '➡️' : '⬅️' }}</span>
+    </div>
+  </aside>
+
+  <!-- Main View Area -->
+  <main class="main-content">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <h2>{{ t('nav_admin') }} - Talentflow RH</h2>
+      </div>
+      <div class="header-right">
+        <!-- Theme Selector -->
+        <div class="header-control">
+          <label>🎨</label>
+          <select [ngModel]="themeService.currentThemeName()" (ngModelChange)="setTheme($event)" class="form-select select-sm">
+            <option *ngFor="let t of themeService.themes" [value]="t.name">{{ t.displayName }}</option>
+          </select>
+        </div>
+
+        <!-- Notification Bell Icon (7 Events) -->
+        <div class="notification-wrapper">
+          <button class="icon-btn" title="7 notifications à consulter">
+            <span class="bell-icon">🔔</span>
+            <span class="notification-badge">7</span>
+          </button>
+        </div>
+
+        <!-- Logged-in User Profile Dropdown -->
+        <div class="profile-wrapper">
+          <div class="profile-trigger" (click)="toggleProfileDropdown()">
+            <!-- L'avatar est l'initiale du prénom ou une icône générique -->
+            <div class="profile-avatar">{{ loggedInUser.avatar }}</div>
+            <div class="profile-info">
+              <span class="profile-name">{{ loggedInUser.name }}</span>
+              <span class="profile-role">{{ loggedInUser.role }}</span>
+            </div>
+            <span class="dropdown-arrow">▼</span>
+          </div>
+
+          <!-- Menu de profil en verre dépoli -->
+          <div class="profile-dropdown-menu card-glass" *ngIf="isProfileDropdownOpen()">
+            <div class="dropdown-header">
+              <strong>{{ loggedInUser.name }}</strong>
+              <span class="text-xs text-muted">{{ authService.currentUser()?.email || 'admin@tunytech.com' }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            
+            <!-- SÉLECTEUR DE LANGUE RAPIDE ET INTERACTIF DANS LE MENU PROFIL AVEC DRAPEAUX REELS -->
+            <div class="dropdown-item dropdown-lang-selector-row">
+              <span class="lang-label">🌐 Langue :</span>
+              <div class="profile-lang-dropdown-container">
+                <button 
+                  type="button"
+                  class="profile-lang-trigger" 
+                  (click)="isLangDropdownOpen.update(v => !v); $event.stopPropagation()"
+                  title="Choisir la langue de l'application">
+                  <img 
+                    [src]="translationService.languages.find(l => l.code === translationService.currentLanguage())?.flagUrl" 
+                    alt="Active Flag" 
+                    class="profile-lang-flag-img" />
+                  <span class="profile-lang-text">
+                    {{ translationService.languages.find(l => l.code === translationService.currentLanguage())?.name }}
+                  </span>
+                  <span class="profile-arrow">▼</span>
+                </button>
+
+                <!-- Liste suspendue des langues avec drapeaux HD (ouvre vers le haut pour rester visible) -->
+                <div class="profile-lang-menu card-glass animate-pop" *ngIf="isLangDropdownOpen()">
+                  <button 
+                    type="button"
+                    class="profile-lang-option" 
+                    *ngFor="let lang of translationService.languages" 
+                    (click)="selectLanguage(lang.code)">
+                    <img [src]="lang.flagUrl" alt="Drapeau {{ lang.name }}" class="profile-lang-flag-img" />
+                    <span class="profile-lang-option-text">{{ lang.name }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="dropdown-divider"></div>
+            
+            <!-- Bouton pour changer de mot de passe à tout moment -->
+            <button class="dropdown-item" (click)="openPasswordModal()">🔑 {{ t('profile_change_password') }}</button>
+            <!-- Bouton de Déconnexion qui renvoie vers l'écran de connexion -->
+            <button class="dropdown-item text-danger-hover" (click)="onLogout()">🚪 {{ t('profile_logout') }}</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sub-tab Navbar -->
+    <div class="sub-navbar">
+      <button class="sub-nav-btn" [class.active]="activeTab() === 'companies'" (click)="setActiveTab('companies')">
+        🏢 {{ t('tab_companies') }}
+      </button>
+      <button class="sub-nav-btn" [class.active]="activeTab() === 'roles'" (click)="setActiveTab('roles')">
+        🛡️ {{ t('tab_roles') }}
+      </button>
+      <button class="sub-nav-btn" [class.active]="activeTab() === 'settings'" (click)="setActiveTab('settings')">
+        ⚙️ {{ t('tab_settings') }}
+      </button>
+      <button class="sub-nav-btn" [class.active]="activeTab() === 'priority'" (click)="setActiveTab('priority')">
+        📊 {{ t('tab_priority') }}
+      </button>
+    </div>
+
+    <!-- Active Tab Content Area -->
+    <div class="content-body scrollable-content">
+      
+      <!-- TOAST SUCCESS ALERTS -->
+      <div class="toast-alert" *ngIf="showToast()">
+        <span class="toast-icon">✅</span>
+        <span class="toast-msg">{{ toastMessage() }}</span>
+      </div>
+
+      <!-- TAB 1: COMPANIES & SUBSIDIARIES -->
+      <div *ngIf="activeTab() === 'companies'" class="tab-pane-layout">
+        <!-- Conteneur gauche pour la hiérarchie -->
+        <div class="pane-left card-glass">
+          <div class="pane-header flex-column-mobile">
+            <h3>{{ t('tab_companies') }}</h3>
+            
+            <!-- BOUTON SÉLECTEUR DE VUE D'ORGANIGRAMME (VUE ARBRE vs VUE DÉPLIÉE HORIZONTALE) -->
+            <div class="org-view-switcher">
+              <button 
+                type="button" 
+                class="switcher-btn" 
+                [class.active]="companyViewMode() === 'tree'" 
+                (click)="companyViewMode.set('tree')"
+                title="Afficher sous forme de liste arborescente verticale">
+                🏢 Liste
+              </button>
+              <button 
+                type="button" 
+                class="switcher-btn" 
+                [class.active]="companyViewMode() === 'chart'" 
+                (click)="companyViewMode.set('chart')"
+                title="Afficher sous forme de rectangles multiniveaux (arbre généalogique)">
+                📊 Organigramme
+              </button>
+            </div>
+
+            <button class="btn btn-primary btn-sm" (click)="onAddNewRootCompany()">
+              + {{ t('btn_add_company') }}
+            </button>
+          </div>
+
+          <!-- RENDU 1 : LISTE ARBORESCENTE CLASSIQUE VERTICALE -->
+          <div class="tree-wrapper mt-3" *ngIf="companyViewMode() === 'tree'">
+            <app-company-tree 
+              *ngFor="let comp of rootCompanies()" 
+              [company]="comp" 
+              [selectedCompanyId]="selectedCompany()?.id || 0"
+              (selectCompany)="onSelectCompany($event)"
+              (addChild)="onAddChildSubsidiary($event)"
+              (editCompany)="onEditCompany($event)"
+            ></app-company-tree>
+          </div>
+
+          <!-- RENDU 2 : ORGANIGRAMME HIÉRARCHIQUE SOUS FORME DE RECTANGLES GRAPHISÉS -->
+          <!-- Le conteneur scrollable permet de faire défiler l'organigramme s'il est très large en local -->
+          <div class="org-chart-viewport mt-3" *ngIf="companyViewMode() === 'chart'">
+            <div class="org-chart-tree-container">
+              <app-company-org-chart 
+                *ngFor="let comp of rootCompanies()" 
+                [company]="comp" 
+                [selectedCompanyId]="selectedCompany()?.id || 0"
+                (selectCompany)="onEditCompany($event)"
+              ></app-company-org-chart>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pane-right card-glass" *ngIf="selectedCompany() || isAddingSubsidiary()">
+          <h3>{{ isAddingSubsidiary() ? t('btn_add_child') : t('fields_company_details') }}</h3>
+          
+          <form (submit)="onSaveCompany($event)" class="mt-3">
+            <div class="form-group" *ngIf="isAddingSubsidiary() && parentCompanyForSubsidiary()">
+              <label class="form-label">{{ t('fields_company_parent') }}</label>
+              <input type="text" [value]="parentCompanyForSubsidiary()!.name" class="form-input" disabled />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">{{ t('col_name') }}</label>
+              <input type="text" [(ngModel)]="companyFormModel.name" name="companyName" class="form-input" required placeholder="e.g. Tunytech Europe" />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">{{ t('col_siret') }}</label>
+              <input type="text" [(ngModel)]="companyFormModel.vatNumber" name="companyVat" class="form-input" placeholder="e.g. FR8812738" />
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group col">
+                <label class="form-label">{{ t('col_country') }}</label>
+                <input type="text" [(ngModel)]="companyFormModel.country" name="companyCountry" class="form-input" placeholder="e.g. France" />
+              </div>
+              <div class="form-group col">
+                <label class="form-label">{{ t('col_city') }}</label>
+                <input type="text" [(ngModel)]="companyFormModel.city" name="companyCity" class="form-input" placeholder="e.g. Paris" />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">{{ t('col_address') }}</label>
+              <input type="text" [(ngModel)]="companyFormModel.address" name="companyAddress" class="form-input" placeholder="e.g. 10 Avenue des Champs" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">{{ t('col_contact') }}</label>
+              <input type="text" [(ngModel)]="companyFormModel.contactInfo" name="companyContact" class="form-input" placeholder="e.g. contact@tunytech.com" />
+            </div>
+
+            <!-- CHAMP D'IMPORTATION DU LOGO DE LA SOCIÉTÉ (UPLOAD DE VRAI FICHIER) -->
+            <div class="form-group">
+              <label class="form-label">{{ t('fields_company_logo') }}</label>
+              
+              <!-- Aperçu du logo s'il a déjà été converti en Base64 -->
+              <div class="logo-upload-preview" *ngIf="companyFormModel.logo">
+                <img [src]="companyFormModel.logo" alt="Logo de l'entreprise" class="logo-thumbnail" />
+                <button type="button" class="btn btn-secondary btn-sm" (click)="companyFormModel.logo = ''" title="Supprimer le logo actuel">
+                  {{ t('btn_delete_logo') }}
+                </button>
+              </div>
+
+              <!-- Sélecteur de fichier réel sur Windows -->
+              <input 
+                type="file" 
+                (change)="onLogoFileSelected($event)" 
+                accept=".png,.jpg,.jpeg,.svg,.gif,.webp,.bmp,.ico"
+                class="form-input" />
+              <small class="text-muted">{{ t('fields_company_logo_desc') }}</small>
+            </div>
+            
+            <div class="form-actions mt-3">
+              <button type="submit" class="btn btn-primary">{{ t('btn_save') }}</button>
+              <button type="button" class="btn btn-secondary" (click)="onCancelCompanyForm()">{{ t('btn_cancel') }}</button>
+              <button type="button" *ngIf="!isAddingSubsidiary() && selectedCompany()?.id" class="btn btn-danger" (click)="onDeleteCompany()">
+                {{ t('btn_delete') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 2: USERS & ROLES -->
+      <div *ngIf="activeTab() === 'roles'" class="tab-pane-layout-vertical">
+        <!-- Accounts User table -->
+        <div class="card-glass">
+          <div class="pane-header">
+            <h3>{{ t('users_title') }}</h3>
+            <button class="btn btn-primary btn-sm" (click)="onOpenUserCreate()">{{ t('btn_add_user') }}</button>
+          </div>
+          
+          <!-- CRUD user form when open -->
+          <div class="user-inline-form mt-3" *ngIf="isEditingUser() || isCreatingUser()">
+            <h4>{{ isCreatingUser() ? t('users_new_title') : t('users_edit_title') }}</h4>
+            <form (submit)="onSaveUser($event)" class="form-grid mt-2">
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" [(ngModel)]="userFormModel.username" name="uName" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('col_email') }}</label>
+                <input type="email" [(ngModel)]="userFormModel.email" name="uEmail" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('fields_company_parent') }}</label>
+                <select [(ngModel)]="userFormModel.companyId" name="uCompany" class="form-select">
+                  <option *ngFor="let c of adminService.companies()" [value]="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('col_role') }}</label>
+                <select [(ngModel)]="userFormModel.roleId" name="uRole" class="form-select">
+                  <option *ngFor="let r of adminService.roles()" [value]="r.id">{{ r.name }}</option>
+                </select>
+              </div>
+              <div class="form-actions-full">
+                <button type="submit" class="btn btn-primary btn-sm">{{ t('btn_save') }}</button>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="onCancelUserForm()">{{ t('btn_cancel') }}</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-container mt-3">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>{{ t('col_email') }}</th>
+                  <th>{{ t('fields_company_parent') }}</th>
+                  <th>{{ t('col_role') }}</th>
+                  <th>{{ t('col_status') }}</th>
+                  <th>{{ t('col_actions') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let u of adminService.users()">
+                  <td><strong>{{ u.username }}</strong></td>
+                  <td>{{ u.email }}</td>
+                  <td><span class="badge badge-primary">{{ u.company?.name || 'N/A' }}</span></td>
+                  <td>{{ u.role?.name || 'N/A' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-success]="u.active" [class.badge-danger]="!u.active">
+                      {{ u.active ? t('status_active') : t('status_inactive') }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-secondary btn-sm p-1 mx-1" [title]="t('btn_edit')" (click)="onEditUser(u)">✏️</button>
+                    <button class="btn btn-danger btn-sm p-1 mx-1" [title]="t('btn_delete')" (click)="onDeleteUser(u)">🗑️</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Permissions Dynamic Matrix -->
+        <div class="card-glass mt-4">
+          <h3>{{ t('permissions_matrix_title') }}</h3>
+          <p class="text-muted text-sm mt-1">{{ t('permissions_matrix_desc') }}</p>
+          <app-permission-matrix 
+            [roles]="adminService.roles()" 
+            [permissions]="adminService.permissions()"
+            (updateRole)="onUpdateRolePermissions($event)"
+          ></app-permission-matrix>
+        </div>
+      </div>
+
+      <!-- TAB 3: GLOBAL CONFIGURATION -->
+      <div *ngIf="activeTab() === 'settings'" class="tab-pane-layout-vertical settings-pane-wide">
+        <div class="card-glass">
+          <div class="pane-header flex-column-mobile">
+            <h3>⚙️ {{ t('tab_settings') }}</h3>
+            <!-- Choix du contexte entreprise pour les réglages -->
+            <div class="company-context-selector">
+              <label class="form-label text-sm">Société active :</label>
+              <select [ngModel]="adminService.activeCompanyId()" (ngModelChange)="onSelectSettingsCompany($event)" class="form-select select-sm select-inline">
+                <option *ngFor="let c of adminService.companies()" [value]="c.id">{{ c.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 
+            BARRE DE NAVIGATION DES SOUS-CATÉGORIES :
+            Permet de trier proprement les 100+ paramètres d'administration sans inonder l'écran !
+          -->
+          <div class="settings-sub-navbar">
+            <button 
+              type="button" 
+              class="sub-tab-btn" 
+              [class.active]="activeSettingsSubTab() === 'time'" 
+              (click)="activeSettingsSubTab.set('time')">
+              ⏰ Temps & Télétravail
+            </button>
+            <button 
+              type="button" 
+              class="sub-tab-btn" 
+              [class.active]="activeSettingsSubTab() === 'security'" 
+              (click)="activeSettingsSubTab.set('security')">
+              🔐 Mots de Passe & Sécurité
+            </button>
+            <button 
+              type="button" 
+              class="sub-tab-btn" 
+              [class.active]="activeSettingsSubTab() === 'hr'" 
+              (click)="activeSettingsSubTab.set('hr')">
+              📚 Référentiels RH
+            </button>
+            <button 
+              type="button" 
+              class="sub-tab-btn" 
+              [class.active]="activeSettingsSubTab() === 'alerts'" 
+              (click)="activeSettingsSubTab.set('alerts')">
+              📈 Seuils & Alertes
+            </button>
+          </div>
+          
+          <form (submit)="onSaveSettings($event)" class="mt-4">
+            
+            <!-- =========================================================================
+                 SOUS-ONGLET 1 : HEURES DE TRAVAIL & TÉLÉTRAVAIL (TIME)
+                 ========================================================================= -->
+            <div *ngIf="activeSettingsSubTab() === 'time'" class="animate-fade">
+              <h4 class="section-title">🕒 {{ t('settings_work_hours') }}</h4>
+              <div class="form-row mt-2">
+                <div class="form-group col">
+                  <label class="form-label">{{ t('settings_work_start') }}</label>
+                  <input type="text" [(ngModel)]="settingsModel.WORK_START_HOUR" name="workStart" class="form-input" placeholder="e.g. 08:00" />
+                </div>
+                <div class="form-group col">
+                  <label class="form-label">{{ t('settings_work_end') }}</label>
+                  <input type="text" [(ngModel)]="settingsModel.WORK_END_HOUR" name="workEnd" class="form-input" placeholder="e.g. 17:00" />
+                </div>
+                <div class="form-group col">
+                  <label class="form-label">{{ t('settings_max_daily') }}</label>
+                  <input type="number" max="24" [(ngModel)]="settingsModel.MAX_HOURS_DAILY" name="workMaxHours" class="form-input" />
+                </div>
+              </div>
+
+              <h4 class="section-title mt-4">💻 {{ t('settings_wfh_rules') }}</h4>
+              <div class="form-row mt-2">
+                <div class="form-group col">
+                  <label class="form-label">{{ t('settings_wfh_days_week') }}</label>
+                  <input type="number" max="7" [(ngModel)]="settingsModel.WFH_DAYS_WEEK" name="wfhWeek" class="form-input" />
+                </div>
+                <div class="form-group col">
+                  <label class="form-label">{{ t('settings_wfh_days_month') }}</label>
+                  <input type="number" max="31" [(ngModel)]="settingsModel.WFH_DAYS_MONTH" name="wfhMonth" class="form-input" />
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="form-label">{{ t('settings_wfh_exceptions') }}</label>
+                <textarea [(ngModel)]="settingsModel.WFH_EXCEPTION_MOTIFS" name="wfhMotifs" class="form-textarea" rows="3" [placeholder]="t('settings_wfh_exceptions_placeholder')"></textarea>
+              </div>
+            </div>
+
+            <!-- =========================================================================
+                 SOUS-ONGLET 2 : MOTEUR DE SÉCURITÉ DES MOTS DE PASSE (SECURITY)
+                 ========================================================================= -->
+            <div *ngIf="activeSettingsSubTab() === 'security'" class="animate-fade">
+              <h4 class="section-title">🛡️ {{ t('settings_security_title') }}</h4>
+              
+              <!-- 
+                1. Taille minimale configurable :
+                Si l'administrateur tente de mettre un chiffre inférieur à 8, 
+                l'application affiche immédiatement un grand panneau de warning d'alerte sécurité jaune !
+              -->
+              <div class="form-group mt-2">
+                <label class="form-label">{{ t('settings_min_len_label') }}</label>
+                <input 
+                  type="number" 
+                  min="4" 
+                  max="30" 
+                  [(ngModel)]="settingsModel.MIN_PASSWORD_LENGTH" 
+                  name="minPasswordLength" 
+                  class="form-input" />
+                
+                @if (settingsModel.MIN_PASSWORD_LENGTH < 8) {
+                  <div class="warning-alert-box mt-2 animate-pop">
+                    {{ t('settings_min_len_warning') }}
+                  </div>
+                }
+              </div>
+
+              <!-- 2. Durée de validité avant expiration -->
+              <div class="form-group mt-3">
+                <label class="form-label">{{ t('settings_expiry_label') }}</label>
+                <input 
+                  type="number" 
+                  min="30" 
+                  max="365" 
+                  [(ngModel)]="settingsModel.PASSWORD_EXPIRY_DAYS" 
+                  name="passwordExpiryDays" 
+                  class="form-input" />
+                <small class="text-muted">{{ t('settings_expiry_desc') }}</small>
+              </div>
+
+              <!-- 3. Validité du Token temporaire de réinitialisation -->
+              <div class="form-group mt-3">
+                <label class="form-label">{{ t('settings_token_validity_label') }}</label>
+                <input 
+                  type="number" 
+                  min="5" 
+                  max="60" 
+                  [(ngModel)]="settingsModel.TOKEN_VALIDITY_MINUTES" 
+                  name="tokenValidityMinutes" 
+                  class="form-input" />
+                <small class="text-muted">{{ t('settings_token_validity_desc') }}</small>
+              </div>
+            </div>
+
+            <!-- =========================================================================
+                 SOUS-ONGLET 3 : RÉFÉRENTIELS ET DICTIONNAIRES RH (HR)
+                 ========================================================================= -->
+            <div *ngIf="activeSettingsSubTab() === 'hr'" class="animate-fade">
+              <h4 class="section-title">📚 {{ t('settings_hr_title') }}</h4>
+
+              <app-hr-referentials
+                [companyId]="adminService.activeCompanyId()"
+                [onToast]="triggerToastFromRef.bind(this)">
+              </app-hr-referentials>
+
+              <hr class="settings-divider mt-4 mb-3" />
+
+              <h4 class="section-title">{{ t('settings_other_referentials') }}</h4>
+
+              <!-- Liste des formations -->
+              <div class="form-group mt-3">
+                <label class="form-label">{{ t('settings_trainings_label') }}</label>
+                <textarea 
+                  [(ngModel)]="settingsModel.TRAINING_THEMES" 
+                  name="trainingThemes" 
+                  class="form-textarea" 
+                  rows="3" 
+                  placeholder="Cybersécurité, Audit Qualité, etc..."></textarea>
+              </div>
+
+              <!-- Liste des habilitations/certifications -->
+              <div class="form-group mt-3">
+                <label class="form-label">{{ t('settings_habilitations_label') }}</label>
+                <textarea 
+                  [(ngModel)]="settingsModel.HABILITATION_LIST" 
+                  name="habilitationList" 
+                  class="form-textarea" 
+                  rows="3" 
+                  placeholder="Habilitation Électrique, ISO 9001 Lead Auditor, etc..."></textarea>
+              </div>
+            </div>
+
+            <!-- =========================================================================
+                 SOUS-ONGLET 4 : ALERTES & NOTIFICATIONS SYSTÈME (ALERTS)
+                 ========================================================================= -->
+            <div *ngIf="activeSettingsSubTab() === 'alerts'" class="animate-fade">
+              <h4 class="section-title">{{ t('settings_thresholds_title') }}</h4>
+
+              <!-- Seuil critique de Turn-over -->
+              <div class="form-group mt-2">
+                <label class="form-label">{{ t('settings_turnover_label') }}</label>
+                <input 
+                  type="number" 
+                  min="1" 
+                  max="50" 
+                  [(ngModel)]="settingsModel.TURNOVER_CRITICAL_THRESHOLD" 
+                  name="turnoverCritical" 
+                  class="form-input" />
+                <small class="text-muted">{{ t('settings_turnover_desc') }}</small>
+              </div>
+            </div>
+            
+            <div class="form-actions mt-4 border-t pt-3">
+              <button type="submit" class="btn btn-primary">💾 {{ t('btn_save') }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 4: PRIORITY MODULES & DASHBOARD -->
+      <div *ngIf="activeTab() === 'priority'" class="tab-pane-layout-vertical">
+        <!-- 4 Grid dashboard display cards for priority modules -->
+        <div class="modules-dashboard-grid">
+          
+          <!-- Module 1: Employees -->
+          <div class="card-glass shadow-hover">
+            <div class="dashboard-card-header">
+              <span class="card-icon">👥</span>
+              <h4>{{ t('module_employees') }}</h4>
+            </div>
+            <div class="card-stats mt-2">
+              <div class="stat-item">
+                <span class="stat-number">124</span>
+                <span class="stat-label">{{ t('stat_employees') }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">5</span>
+                <span class="stat-label">{{ t('stat_onboarding') }}</span>
+              </div>
+            </div>
+            <p class="text-sm mt-3 text-muted">{{ t('desc_employees') }}</p>
+          </div>
+
+          <!-- Module 2: Skills -->
+          <div class="card-glass shadow-hover">
+            <div class="dashboard-card-header">
+              <span class="card-icon">🎯</span>
+              <h4>{{ t('module_skills') }}</h4>
+            </div>
+            <div class="card-stats mt-2">
+              <div class="stat-item">
+                <span class="stat-number">48</span>
+                <span class="stat-label">{{ t('stat_skills') }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">84%</span>
+                <span class="stat-label">{{ t('stat_polyvalence') }}</span>
+              </div>
+            </div>
+            <p class="text-sm mt-3 text-muted">{{ t('desc_skills') }}</p>
+          </div>
+
+          <!-- Module 3: Habilitations -->
+          <div class="card-glass shadow-hover border-warning">
+            <div class="dashboard-card-header">
+              <span class="card-icon">📜</span>
+              <h4>{{ t('module_habilitations') }}</h4>
+            </div>
+            <div class="card-stats mt-2">
+              <div class="stat-item">
+                <span class="stat-number text-warning">4</span>
+                <span class="stat-label">{{ t('stat_expirations') }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">18</span>
+                <span class="stat-label">{{ t('stat_certified') }}</span>
+              </div>
+            </div>
+            <p class="text-sm mt-3 text-muted">{{ t('desc_habilitations') }}</p>
+          </div>
+
+          <!-- Module 4: Formations -->
+          <div class="card-glass shadow-hover">
+            <div class="dashboard-card-header">
+              <span class="card-icon">🎓</span>
+              <h4>{{ t('module_trainings') }}</h4>
+            </div>
+            <div class="card-stats mt-2">
+              <div class="stat-item">
+                <span class="stat-number">€12.5k</span>
+                <span class="stat-label">{{ t('stat_budget') }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">92%</span>
+                <span class="stat-label">{{ t('stat_satisfaction') }}</span>
+              </div>
+            </div>
+            <p class="text-sm mt-3 text-muted">{{ t('desc_trainings') }}</p>
+          </div>
+
+        </div>
+
+        <!-- Detailed display tables for listings with Search & Pagination & simulated CSV export -->
+        <div class="card-glass mt-4">
+          <div class="pane-header">
+            <div class="pane-header-left">
+              <h3>{{ t('employees_list_title') }}</h3>
+              <p class="text-muted text-sm mt-1">{{ t('employees_list_subtitle') }}</p>
+            </div>
+            <div class="pane-header-right">
+              <!-- Search box -->
+              <input 
+                type="text" 
+                [(ngModel)]="searchQuery" 
+                (ngModelChange)="onSearch()"
+                [placeholder]="t('search_placeholder')" 
+                class="form-input search-box select-inline" 
+              />
+              
+              <!-- Simulated Export button with downloading animation support -->
+              <button class="btn btn-secondary btn-sm" (click)="onExportReport()" [disabled]="isExporting()">
+                <span *ngIf="isExporting()">⏳ {{ t('btn_export') }}...</span>
+                <span *ngIf="!isExporting()">📥 {{ t('btn_export') }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Employees registry listing -->
+          <div class="table-container mt-3">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>{{ t('col_employee_name') }}</th>
+                  <th>{{ t('fields_company_parent') }}</th>
+                  <th>{{ t('col_job_title') }}</th>
+                  <th>{{ t('col_key_skill') }}</th>
+                  <th>{{ t('col_role') }}</th>
+                  <th>{{ t('col_hab_exp') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let emp of filteredEmployees()">
+                  <td>
+                    <div class="employee-cell">
+                      <span class="emp-avatar">👤</span>
+                      <div>
+                        <strong>{{ emp.name }}</strong>
+                        <span class="text-muted text-xs block">{{ emp.email }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-primary">{{ emp.company }}</span></td>
+                  <td>{{ emp.role }}</td>
+                  <td>
+                    <div class="skill-indicator-wrapper">
+                      <span>{{ emp.skill }}</span>
+                      <span class="skill-stars">{{ '★'.repeat(emp.skillLevel) }}{{ '☆'.repeat(5 - emp.skillLevel) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge" [class.badge-success]="emp.habStatus === 'ok'" [class.badge-warning]="emp.habStatus === 'warning'">
+                      {{ emp.habilitation }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="text-sm font-semibold" [class.text-warning]="emp.habStatus === 'warning'">
+                      {{ emp.habExp }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination details -->
+          <div class="pagination-wrapper mt-3">
+            <span class="text-muted text-sm">{{ t('pagination_showing').replace('{length}', '' + filteredEmployees().length).replace('{total}', '' + totalEmployeesCount) }}</span>
+            <div class="pagination-buttons">
+              <button class="btn btn-secondary btn-xs" disabled>&lt;</button>
+              <button class="btn btn-primary btn-xs">1</button>
+              <button class="btn btn-secondary btn-xs" disabled>&gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- CHANGE PASSWORD MODAL OVERLAY -->
+<div class="modal-overlay" *ngIf="showPasswordModal()">
+  <div class="modal-card card-glass profile-pwd-modal">
+    <div class="modal-header border-b pb-2">
+      <h3>🔑 {{ t('pwd_modal_title') }}</h3>
+      <button class="close-btn" (click)="closePasswordModal()">✕</button>
+    </div>
+    <form (submit)="onSavePassword($event)" class="mt-3">
+      <!-- A. Saisie du mot de passe actuel -->
+      <div class="form-group">
+        <label class="form-label">{{ t('pwd_modal_current') }}</label>
+        <div class="input-icon-wrapper">
+          <input 
+            type="password" 
+            [ngModel]="passwordFormModel.currentPassword()" 
+            (ngModelChange)="passwordFormModel.currentPassword.set($event)" 
+            name="currPass" 
+            class="form-input" 
+            placeholder="{{ t('pwd_modal_current_ph') }}"
+            required />
+        </div>
+      </div>
+
+      <!-- B. Saisie du nouveau mot de passe fort -->
+      <div class="form-group">
+        <label class="form-label">{{ t('auth_new_password') }}</label>
+        <div class="input-icon-wrapper">
+          <input 
+            type="password" 
+            [ngModel]="passwordFormModel.newPassword()" 
+            (ngModelChange)="passwordFormModel.newPassword.set($event)" 
+            name="newPass" 
+            class="form-input" 
+            placeholder="{{ t('pwd_modal_new_ph') }}"
+            required />
+        </div>
+      </div>
+
+      <!-- C. Confirmation du nouveau mot de passe -->
+      <div class="form-group">
+        <label class="form-label">{{ t('auth_confirm_password') }}</label>
+        <div class="input-icon-wrapper">
+          <input 
+            type="password" 
+            [ngModel]="passwordFormModel.confirmPassword()" 
+            (ngModelChange)="passwordFormModel.confirmPassword.set($event)" 
+            name="confPass" 
+            class="form-input" 
+            placeholder="{{ t('pwd_modal_confirm_ph') }}"
+            required />
+        </div>
+      </div>
+      
+      <!-- 
+        =========================================================================
+        PANNEAU VISUEL DES CRITÈRES DE FORCE DU MOT DE PASSE EN TEMPS RÉEL !
+        =========================================================================
+      -->
+      <div class="password-safety-box mt-3 mb-2 compact-safety-box">
+        
+        <!-- Warning jaune si la longueur configurée est inférieure à 8 -->
+        <div class="warning-alert-box animate-pop mb-2 p-2 text-xs" *ngIf="profileMinPasswordLength() < 8">
+          ⚠️ {{ t('auth_warning_8') }}
+        </div>
+
+        <!-- Indicateur graphique multicolore de la force -->
+        <div class="strength-bar-container">
+          <div class="strength-bar" [style.width.%]="profilePasswordStrengthPercent()" [className]="'strength-bar ' + profileStrengthColorClass()"></div>
+        </div>
+
+        <!-- Liste des critères de complexité sous forme de grille compacte -->
+        <ul class="criteria-list profile-criteria-list">
+          <li [class.valid]="isProfileLengthValid()">
+            <span class="bullet">{{ isProfileLengthValid() ? '✓' : '○' }}</span>
+            <span class="criteria-label">{{ t('auth_rule_len') }} ({{ profileMinPasswordLength() }} min)</span>
+          </li>
+          <li [class.valid]="isProfileCapitalValid()">
+            <span class="bullet">{{ isProfileCapitalValid() ? '✓' : '○' }}</span>
+            <span class="criteria-label">{{ t('auth_rule_case') }}</span>
+          </li>
+          <li [class.valid]="isProfileDigitValid()">
+            <span class="bullet">{{ isProfileDigitValid() ? '✓' : '○' }}</span>
+            <span class="criteria-label">{{ t('auth_rule_num') }}</span>
+          </li>
+          <li [class.valid]="isProfileSpecialValid()">
+            <span class="bullet">{{ isProfileSpecialValid() ? '✓' : '○' }}</span>
+            <span class="criteria-label">{{ t('auth_rule_spec') }}</span>
+          </li>
+          <li [class.valid]="isProfilePersonalNameValid()">
+            <span class="bullet">{{ isProfilePersonalNameValid() ? '✓' : '○' }}</span>
+            <span class="criteria-label">{{ t('auth_rule_name') }}</span>
+          </li>
+          <li [class.valid]="isProfileMatchValid()">
+            <span class="bullet">{{ isProfileMatchValid() ? '✓' : '○' }}</span>
+            <span class="criteria-label">{{ t('pwd_modal_rule_match') }}</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="form-actions mt-4 border-t pt-3">
+        <!-- Le bouton de changement est grisé tant que le nouveau mot de passe n'est pas 100% conforme -->
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="!isProfileLengthValid() || !isProfileCapitalValid() || !isProfileDigitValid() || !isProfileSpecialValid() || !isProfilePersonalNameValid() || !isProfileMatchValid()">
+          {{ t('pwd_modal_submit') }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closePasswordModal()">{{ t('btn_cancel') }}</button>
+      </div>
+    </form>
+  </div>
+</div>

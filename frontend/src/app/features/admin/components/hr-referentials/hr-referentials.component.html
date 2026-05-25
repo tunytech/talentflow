@@ -1,0 +1,253 @@
+<div class="hr-ref-container">
+  <p class="text-sm text-muted mb-3">{{ t('ref_skills_intro') }}</p>
+
+  <div class="hr-ref-navbar">
+    <button type="button" class="sub-tab-btn" [class.active]="activePanel() === 'categories'" (click)="setPanel('categories')">
+      📂 {{ t('ref_tab_categories') }}
+    </button>
+    <button type="button" class="sub-tab-btn" [class.active]="activePanel() === 'skills'" (click)="setPanel('skills')">
+      🎯 {{ t('ref_tab_skills') }}
+    </button>
+    <button type="button" class="sub-tab-btn" [class.active]="activePanel() === 'jobProfiles'" (click)="setPanel('jobProfiles')">
+      👔 {{ t('ref_tab_job_profiles') }}
+    </button>
+  </div>
+
+  <!-- Catégories -->
+  <div *ngIf="activePanel() === 'categories'" class="hr-ref-panel animate-fade">
+    <div class="hr-ref-grid">
+      <form class="hr-ref-form card-glass-inner" (submit)="saveCategory($event)">
+        <h5>{{ categoryForm.id ? t('ref_edit') : t('ref_add') }} — {{ t('ref_tab_categories') }}</h5>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_name') }} *</label>
+          <input type="text" [(ngModel)]="categoryForm.name" name="catName" class="form-input" required />
+        </div>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_description') }}</label>
+          <textarea [(ngModel)]="categoryForm.description" name="catDesc" class="form-textarea" rows="2"></textarea>
+        </div>
+        <div class="form-row mt-2">
+          <div class="form-group col">
+            <label class="form-label">{{ t('ref_sort_order') }}</label>
+            <input type="number" [(ngModel)]="categoryForm.sortOrder" name="catOrder" class="form-input" />
+          </div>
+          <div class="form-group col flex-center">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="categoryForm.active" name="catActive" />
+              {{ t('ref_active') }}
+            </label>
+          </div>
+        </div>
+        <div class="form-actions mt-3">
+          <button type="submit" class="btn btn-primary btn-sm">💾 {{ t('btn_save') }}</button>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="resetCategoryForm()">{{ t('ref_cancel') }}</button>
+        </div>
+      </form>
+
+      <div class="hr-ref-list">
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th>{{ t('ref_name') }}</th>
+              <th>{{ t('ref_sort_order') }}</th>
+              <th>{{ t('ref_status') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of categories()" (click)="editCategory(c)" class="clickable-row" [class.selected-row]="categoryForm.id === c.id">
+              <td><strong>{{ c.name }}</strong><br /><small class="text-muted">{{ c.description }}</small></td>
+              <td>{{ c.sortOrder }}</td>
+              <td><span class="badge" [class.badge-ok]="c.active" [class.badge-off]="!c.active">{{ c.active ? t('ref_active') : t('ref_inactive') }}</span></td>
+              <td class="actions-cell">
+                <button type="button" class="btn-icon" (click)="editCategory(c); $event.stopPropagation()" title="Edit">✏️</button>
+                <button type="button" class="btn-icon danger" (click)="deleteCategory(c); $event.stopPropagation()" title="Delete">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="categories().length === 0">
+              <td colspan="4" class="text-muted text-center">{{ t('ref_empty') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compétences -->
+  <div *ngIf="activePanel() === 'skills'" class="hr-ref-panel animate-fade">
+    <div class="hr-ref-grid">
+      <form class="hr-ref-form card-glass-inner" (submit)="saveSkill($event)">
+        <h5>{{ skillForm.id ? t('ref_edit') : t('ref_add') }} — {{ t('ref_tab_skills') }}</h5>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_name') }} *</label>
+          <input type="text" [(ngModel)]="skillForm.name" name="skillName" class="form-input" required />
+        </div>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_category') }}</label>
+          <select [(ngModel)]="skillForm.categoryId" name="skillCat" class="form-select">
+            <option [ngValue]="null">—</option>
+            <option *ngFor="let c of categories()" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_description') }}</label>
+          <textarea [(ngModel)]="skillForm.description" name="skillDesc" class="form-textarea" rows="2"></textarea>
+        </div>
+        <div class="form-row mt-2">
+          <div class="form-group col">
+            <label class="form-label">{{ t('ref_expected_level') }}</label>
+            <select [(ngModel)]="skillForm.expectedLevel" name="skillExp" class="form-select">
+              <option *ngFor="let l of levelOptions" [ngValue]="l">{{ l }}</option>
+            </select>
+          </div>
+          <div class="form-group col">
+            <label class="form-label">{{ t('ref_min_level') }}</label>
+            <select [(ngModel)]="skillForm.minRequiredLevel" name="skillMin" class="form-select">
+              <option *ngFor="let l of levelOptions" [ngValue]="l">{{ l }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_criticality') }}</label>
+          <select [(ngModel)]="skillForm.criticality" name="skillCrit" class="form-select">
+            <option *ngFor="let c of criticalityOptions" [ngValue]="c">{{ criticalityLabel(c) }}</option>
+          </select>
+        </div>
+        <div class="form-group mt-2">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="skillForm.mandatoryByDefault" name="skillMandatory" />
+            {{ t('ref_mandatory_default') }}
+          </label>
+          <label class="checkbox-label ml-3">
+            <input type="checkbox" [(ngModel)]="skillForm.active" name="skillActive" />
+            {{ t('ref_active') }}
+          </label>
+        </div>
+        <div class="form-actions mt-3">
+          <button type="submit" class="btn btn-primary btn-sm">💾 {{ t('btn_save') }}</button>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="resetSkillForm()">{{ t('ref_cancel') }}</button>
+        </div>
+      </form>
+
+      <div class="hr-ref-list">
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th>{{ t('ref_name') }}</th>
+              <th>{{ t('ref_category') }}</th>
+              <th>{{ t('ref_levels') }}</th>
+              <th>{{ t('ref_criticality') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of skills()" (click)="editSkill(s)" class="clickable-row" [class.selected-row]="skillForm.id === s.id">
+              <td><strong>{{ s.name }}</strong></td>
+              <td>{{ s.category?.name || '—' }}</td>
+              <td>{{ s.expectedLevel }} / {{ s.minRequiredLevel }}</td>
+              <td>{{ criticalityLabel(s.criticality) }}</td>
+              <td class="actions-cell">
+                <button type="button" class="btn-icon" (click)="editSkill(s); $event.stopPropagation()">✏️</button>
+                <button type="button" class="btn-icon danger" (click)="deleteSkill(s); $event.stopPropagation()">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="skills().length === 0">
+              <td colspan="5" class="text-muted text-center">{{ t('ref_empty') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profils métiers -->
+  <div *ngIf="activePanel() === 'jobProfiles'" class="hr-ref-panel animate-fade">
+    <div class="hr-ref-grid hr-ref-grid-wide">
+      <form class="hr-ref-form card-glass-inner" (submit)="saveProfile($event)">
+        <h5>{{ profileForm.id ? t('ref_edit') : t('ref_add') }} — {{ t('ref_tab_job_profiles') }}</h5>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_name') }} *</label>
+          <input type="text" [(ngModel)]="profileForm.name" name="profName" class="form-input" required />
+        </div>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_description') }}</label>
+          <textarea [(ngModel)]="profileForm.description" name="profDesc" class="form-textarea" rows="2"></textarea>
+        </div>
+        <div class="form-group mt-2">
+          <label class="form-label">{{ t('ref_responsibility_level') }}</label>
+          <input type="text" [(ngModel)]="profileForm.responsibilityLevel" name="profLevel" class="form-input" placeholder="N+1, Expert..." />
+        </div>
+        <div class="form-group mt-2">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="profileForm.active" name="profActive" />
+            {{ t('ref_active') }}
+          </label>
+        </div>
+
+        <h6 class="mt-3">{{ t('ref_linked_skills') }}</h6>
+        <div class="skill-link-add-row">
+          <select [ngModel]="selectedSkillToAdd()" (ngModelChange)="selectedSkillToAdd.set($event)" name="addSkill" class="form-select">
+            <option [ngValue]="null">{{ t('ref_select_skill') }}</option>
+            <option *ngFor="let s of availableSkillsForProfile()" [ngValue]="s.id">{{ s.name }}</option>
+          </select>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addSkillToProfile()" [disabled]="!selectedSkillToAdd()">+ {{ t('ref_add_skill') }}</button>
+        </div>
+
+        <div *ngIf="profileForm.skillLinks.length > 0" class="skill-links-table mt-2">
+          <div *ngFor="let link of profileForm.skillLinks" class="skill-link-row">
+            <span class="skill-link-name">{{ link.skillName }}</span>
+            <select [(ngModel)]="link.expectedLevel" [name]="'lvl_' + link.skillId" class="form-select select-xs">
+              <option *ngFor="let l of levelOptions" [ngValue]="l">{{ l }}</option>
+            </select>
+            <label class="checkbox-label checkbox-xs">
+              <input type="checkbox" [(ngModel)]="link.mandatory" [name]="'mand_' + link.skillId" />
+              {{ t('ref_mandatory') }}
+            </label>
+            <button type="button" class="btn-icon danger" (click)="removeSkillFromProfile(link.skillId)">✕</button>
+          </div>
+        </div>
+        <p *ngIf="profileForm.skillLinks.length === 0" class="text-sm text-muted mt-2">{{ t('ref_no_skills_linked') }}</p>
+
+        <div class="form-actions mt-3">
+          <button type="submit" class="btn btn-primary btn-sm">💾 {{ t('btn_save') }}</button>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="resetProfileForm()">{{ t('ref_cancel') }}</button>
+        </div>
+      </form>
+
+      <div class="hr-ref-list">
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th>{{ t('ref_name') }}</th>
+              <th>{{ t('ref_linked_skills') }}</th>
+              <th>{{ t('ref_status') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of jobProfiles()" (click)="editProfile(p)" class="clickable-row" [class.selected-row]="profileForm.id === p.id">
+              <td>
+                <strong>{{ p.name }}</strong>
+                <br /><small class="text-muted">{{ p.responsibilityLevel }}</small>
+              </td>
+              <td>
+                <span *ngFor="let ps of p.profileSkills; let last = last" class="skill-tag">
+                  {{ ps.skill?.name }}<span *ngIf="ps.mandatory" class="mandatory-star">*</span><span *ngIf="!last">, </span>
+                </span>
+                <span *ngIf="!p.profileSkills?.length" class="text-muted">—</span>
+              </td>
+              <td><span class="badge" [class.badge-ok]="p.active" [class.badge-off]="!p.active">{{ p.active ? t('ref_active') : t('ref_inactive') }}</span></td>
+              <td class="actions-cell">
+                <button type="button" class="btn-icon" (click)="editProfile(p); $event.stopPropagation()">✏️</button>
+                <button type="button" class="btn-icon danger" (click)="deleteProfile(p); $event.stopPropagation()">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="jobProfiles().length === 0">
+              <td colspan="4" class="text-muted text-center">{{ t('ref_empty') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
