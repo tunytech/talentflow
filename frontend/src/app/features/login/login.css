@@ -22,12 +22,13 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  /* Fond dégradé sombre et mystérieux comme un ciel étoilé */
-  background: radial-gradient(circle at 50% 50%, #0d1224 0%, #05070f 100%);
+  /* Premium radial gradient utilizing theme background variables */
+  background: radial-gradient(circle at 50% 50%, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   overflow-y: auto; /* Permet à la barre de défilement (le curseur vertical) d'apparaître pour descendre */
   font-family: 'Outfit', 'Inter', sans-serif;
-  color: #e2e8f0;
+  color: var(--text-primary);
   padding: 1.25rem 1rem; /* Espacement externe réduit pour compacter l'espace */
+  transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
 /* =========================================================================
@@ -42,6 +43,12 @@
   opacity: 0.15;
   z-index: 1;
   pointer-events: none; /* L'utilisateur passe à travers sans gêner les clics */
+  transition: opacity var(--transition-speed) ease;
+}
+
+:host-context([data-theme="corporate-pure"]) .glow-orb,
+:host-context([data-theme="emerald-eco"]) .glow-orb {
+  opacity: 0.04; /* Softer glowing orbs on bright themes */
 }
 
 /* Orbe Bleue (Gauche) */
@@ -142,7 +149,7 @@
   font-weight: 700;
   letter-spacing: -0.5px;
   /* Effet texte brillant dégradé */
-  background: linear-gradient(135deg, #ffffff 30%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--text-primary) 30%, var(--color-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -166,9 +173,9 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
   padding: 0.5rem 1rem;
   border-radius: 9999px; /* Forme de pillule très moderne */
   outline: none;
@@ -180,9 +187,9 @@
 }
 
 .custom-lang-trigger:hover {
-  background: rgba(15, 23, 42, 0.85);
-  border-color: rgba(168, 85, 247, 0.5);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.25);
+  background: var(--bg-tertiary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.25);
   transform: translateY(-1px); /* Petite impulsion vers le haut au survol */
 }
 
@@ -212,8 +219,8 @@
   top: calc(100% + 0.5rem);
   right: 0;
   width: 170px;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 0.5rem;
   display: flex;
@@ -221,8 +228,7 @@
   gap: 0.25rem;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
-              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
 }
 
@@ -233,7 +239,7 @@
   gap: 0.75rem;
   background: transparent;
   border: none;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   font-family: inherit;
@@ -245,8 +251,8 @@
 }
 
 .custom-lang-option:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 /* =========================================================================
@@ -262,14 +268,13 @@
 
 .login-glass-card {
   width: 100%;
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--glass-bg);
   /* L'effet de flou qui rend le fond "vitré" très chic */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-glass);
   padding: 1.75rem 2rem; /* Espacement intérieur réduit de 2.5rem à 1.75rem 2rem pour compacter */
   display: flex;
   flex-direction: column;
@@ -285,13 +290,13 @@
   font-size: 1.7rem; /* Réduit de 2rem à 1.7rem pour économiser de la hauteur */
   font-weight: 800;
   letter-spacing: -0.5px;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .slogan {
   font-size: 0.9rem; /* Un tout petit peu plus compact */
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-top: 0.4rem;
 }
 
@@ -315,7 +320,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .input-icon-wrapper {
@@ -334,10 +339,9 @@
 
 .input-icon-wrapper input {
   width: 100%;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  color: #ffffff;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   padding: 0.75rem 1rem 0.75rem 2.8rem; /* Réduit la hauteur de l'input (0.75rem au lieu de 0.85rem) */
   outline: none;
   font-size: 0.95rem;
@@ -346,9 +350,9 @@
 }
 
 .input-icon-wrapper input:focus {
-  border-color: #a855f7;
-  background: rgba(15, 23, 42, 0.8);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+  border-color: var(--color-primary);
+  background: var(--bg-secondary);
+  box-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.2);
 }
 
 /* LIENS */
@@ -359,13 +363,13 @@
 
 .forgot-link {
   font-size: 0.85rem;
-  color: #a855f7;
+  color: var(--color-primary);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .forgot-link:hover {
-  color: #c084fc;
+  color: color-mix(in srgb, var(--color-primary) 80%, var(--text-primary));
   text-decoration: underline;
 }
 
@@ -374,7 +378,7 @@
    ========================================================================= */
 .btn-gradient-submit {
   width: 100%;
-  background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 65%, #d946ef) 100%);
   border: none;
   border-radius: 12px;
   color: #ffffff;
@@ -386,14 +390,14 @@
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 20px rgba(var(--color-primary-rgb), 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-gradient-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(217, 70, 239, 0.5);
-  background: linear-gradient(135deg, #7c3aed 0%, #c084fc 100%);
+  box-shadow: 0 6px 25px rgba(var(--color-primary-rgb), 0.5);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 85%, #000000) 0%, color-mix(in srgb, var(--color-primary) 80%, #d946ef) 100%);
 }
 
 .btn-gradient-submit:active:not(:disabled) {
@@ -421,8 +425,8 @@
    CRITÈRES DE VALIDATION DU MOT DE PASSE
    ========================================================================= */
 .password-safety-box {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 0.75rem; /* Réduit de 1rem à 0.75rem */
   margin-top: 0.25rem;
@@ -474,7 +478,7 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   transition: color 0.3s;
 }
 
@@ -506,21 +510,21 @@
 }
 
 .alert-error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
 }
 
 .alert-success {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
 }
 
 .info-bubble {
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  color: #bfdbfe;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+  color: var(--color-primary);
   padding: 0.5rem 0.75rem; /* Réduit le rembourrage vertical */
   border-radius: 12px;
   font-size: 0.8rem;
@@ -537,13 +541,13 @@
 
 .back-link {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .back-link:hover {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 /* =========================================================================
@@ -552,7 +556,7 @@
 .login-footer {
   text-align: center;
   font-size: 0.8rem;
-  color: #475569;
+  color: var(--text-muted);
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -560,7 +564,7 @@
 }
 
 .encryption-note {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.75rem;
 }
 
