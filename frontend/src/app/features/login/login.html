@@ -93,9 +93,22 @@
       @if (view === 'login') {
         <div class="form-view animate-fade">
           <div class="card-intro">
-            <div class="logo-container">
+            <div class="logo-container animate-pop">
               <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
             </div>
+            <h1 class="brand-title">Talentflow</h1>
+            <p class="brand-subtitle">RH Intelligent & Humain</p>
+            
+            <div class="brand-pillars">
+              <span class="pillar">👥 GÉRER</span>
+              <span class="divider">|</span>
+              <span class="pillar">📊 DÉVELOPPER</span>
+              <span class="divider">|</span>
+              <span class="pillar">🛡️ SÉCURISER</span>
+            </div>
+            
+            <div class="auth-title-separator"></div>
+            
             <h2>{{ translationService.translate('auth_login') }}</h2>
             <p class="slogan">{{ translationService.translate('auth_slogan') }}</p>
           </div>
@@ -156,10 +169,12 @@
       -->
       @if (view === 'forgot') {
         <div class="form-view animate-fade">
-          <div class="card-intro">
+          <div class="card-intro compact">
             <div class="logo-container">
-              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+              <img src="/logo.png" class="login-card-logo compact" alt="Talentflow Logo" />
             </div>
+            <h1 class="brand-title compact">Talentflow</h1>
+            <div class="auth-title-separator"></div>
             <h2>{{ translationService.translate('auth_forgot_title') }}</h2>
             <p class="slogan">{{ translationService.translate('auth_forgot_subtitle') }}</p>
           </div>
@@ -204,10 +219,12 @@
       -->
       @if (view === 'reset') {
         <div class="form-view animate-fade">
-          <div class="card-intro">
+          <div class="card-intro compact">
             <div class="logo-container">
-              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+              <img src="/logo.png" class="login-card-logo compact" alt="Talentflow Logo" />
             </div>
+            <h1 class="brand-title compact">Talentflow</h1>
+            <div class="auth-title-separator"></div>
             <h2>{{ translationService.translate('auth_reset_title') }}</h2>
             <p class="slogan">{{ translationService.translate('auth_reset_subtitle') }}</p>
           </div>
@@ -328,10 +345,12 @@
       -->
       @if (view === 'forceChange') {
         <div class="form-view animate-fade">
-          <div class="card-intro">
+          <div class="card-intro compact">
             <div class="logo-container">
-              <img src="/logo.png" class="login-card-logo" alt="Talentflow Logo" />
+              <img src="/logo.png" class="login-card-logo compact" alt="Talentflow Logo" />
             </div>
+            <h1 class="brand-title compact">Talentflow</h1>
+            <div class="auth-title-separator"></div>
             <h2>{{ translationService.translate('auth_force_title') }}</h2>
             <p class="slogan">{{ translationService.translate('auth_force_subtitle') }}</p>
           </div>

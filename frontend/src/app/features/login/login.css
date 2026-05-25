@@ -117,14 +117,21 @@
 }
 
 .header-logo-img {
-  width: 32px;
-  height: 32px;
+  width: 38px; /* Enlarge a bit to make it very clear */
+  height: 38px;
   border-radius: 50%;
-  object-fit: contain;
+  object-fit: cover;
   background: #ffffff;
-  padding: 1px;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
-  animation: pulseLogo 3s infinite ease-in-out;
+  padding: 2px;
+  border: 2px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.6); /* Beautiful glowing purple circle matching mockups */
+  animation: pulseLogo 3.5s infinite ease-in-out;
+  transition: transform 0.3s ease;
+}
+
+.header-logo-img:hover {
+  transform: rotate(360deg) scale(1.1);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.9);
 }
 
 .logo-container {
@@ -134,29 +141,117 @@
 }
 
 .login-card-logo {
-  width: 140px;
-  height: 75px;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
   background: #ffffff;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.25),
+              0 0 35px rgba(var(--color-primary-rgb), 0.1);
+  border: 3.5px solid var(--color-primary);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  z-index: 10;
+  position: relative;
+}
+
+.login-card-logo:hover {
+  transform: scale(1.08) rotate(5deg);
+  box-shadow: 0 12px 35px rgba(var(--color-primary-rgb), 0.35),
+              0 0 45px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.login-card-logo.compact {
+  width: 80px;
+  height: 80px;
+  padding: 4px;
+  border-width: 2.5px;
+  box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.15);
 }
 
 .logo-text {
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 1.7rem;
+  font-weight: 800;
   letter-spacing: -0.5px;
-  /* Effet texte brillant dégradé */
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--color-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
+  background: none;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: initial;
+  transition: color var(--transition-speed) ease;
+}
+
+/* BRANDING & MARKETING TYPOGRAPHY */
+.brand-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.75px;
+  color: var(--text-primary);
+  margin-top: 1rem;
+  margin-bottom: 0.15rem;
+  text-align: center;
+  transition: color var(--transition-speed) ease;
+}
+
+.brand-title.compact {
+  font-size: 1.6rem;
+  margin-top: 0.6rem;
+}
+
+.brand-subtitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  transition: color var(--transition-speed) ease;
+}
+
+.brand-pillars {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-color);
+  max-width: fit-content;
+  margin: 0 auto 1.25rem auto;
+  transition: all var(--transition-speed) ease;
+}
+
+.brand-pillars .pillar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.brand-pillars .divider {
+  color: var(--border-color);
+  opacity: 0.6;
+}
+
+.auth-title-separator {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-color) 20%, var(--border-color) 80%, transparent);
+  margin-bottom: 1.5rem;
+  transition: background var(--transition-speed) ease;
+}
+
+.card-intro.compact {
+  margin-bottom: 1rem;
 }
 
 @keyframes pulseLogo {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(168, 85, 247, 0.4)); }
-  50% { transform: scale(1.1); filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.8)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(var(--color-primary-rgb), 0.4)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(var(--color-primary-rgb), 0.75)); }
 }
 
 /* SELECTEUR DE LANGUE PREMIUM */
