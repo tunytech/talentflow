@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/evaluations")
 @CrossOrigin(origins = "*")
+@SuppressWarnings({"null", "unchecked"})
 public class EvaluationController {
 
     @Autowired
