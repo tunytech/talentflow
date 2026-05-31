@@ -23,6 +23,7 @@ type ReferentialPanel = 'categories' | 'skills' | 'jobProfiles';
 export class HrReferentialsComponent implements OnChanges {
   @Input({ required: true }) companyId!: number;
   @Input() onToast?: (message: string) => void;
+  @Input() initialPanel?: ReferentialPanel;
 
   private readonly adminService = inject(AdminService);
   private readonly translationService = inject(TranslationService);
@@ -52,12 +53,21 @@ export class HrReferentialsComponent implements OnChanges {
 
   selectedSkillToAdd = signal<number | null>(null);
 
+  // Signaux réactifs pour l'interface en cascades de liaison de compétences
+  selectedFamilyId = signal<number | null>(null);
+  selectedSkillId = signal<number | null>(null);
+  selectedLevel = signal<number>(3);
+  selectedMandatory = signal<boolean>(true);
+
   readonly criticalityOptions: SkillCriticality[] = ['LOW', 'MEDIUM', 'HIGH'];
   readonly levelOptions = [1, 2, 3, 4, 5];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['companyId'] && this.companyId) {
       this.loadAll();
+    }
+    if (changes['initialPanel'] && this.initialPanel) {
+      this.activePanel.set(this.initialPanel);
     }
   }
 
@@ -220,6 +230,10 @@ export class HrReferentialsComponent implements OnChanges {
       skillLinks: []
     };
     this.selectedSkillToAdd.set(null);
+    this.selectedFamilyId.set(null);
+    this.selectedSkillId.set(null);
+    this.selectedLevel.set(3);
+    this.selectedMandatory.set(true);
   }
 
   editProfile(p: JobProfile): void {
@@ -255,6 +269,41 @@ export class HrReferentialsComponent implements OnChanges {
       mandatory: skill.mandatoryByDefault ?? true
     });
     this.selectedSkillToAdd.set(null);
+  }
+
+  // --- Cascade Skill Link association methods ---
+  onFamilySelected(familyId: number | null): void {
+    this.selectedFamilyId.set(familyId);
+    this.selectedSkillId.set(null); // Reset subsequent selections
+  }
+
+  skillsForSelectedFamily() {
+    const familyId = this.selectedFamilyId();
+    if (!familyId) return [];
+    const linked = new Set(this.profileForm.skillLinks.map(l => l.skillId));
+    return this.skills().filter(s => 
+      s.id && 
+      s.active && 
+      s.category?.id === familyId && 
+      !linked.has(s.id)
+    );
+  }
+
+  addCascadingSkillToProfile(): void {
+    const skillId = this.selectedSkillId();
+    if (!skillId) return;
+    const skill = this.skills().find(s => s.id === skillId);
+    if (!skill) return;
+
+    this.profileForm.skillLinks.push({
+      skillId: skill.id!,
+      skillName: skill.name,
+      expectedLevel: this.selectedLevel(),
+      mandatory: this.selectedMandatory()
+    });
+
+    // Reset selectors
+    this.selectedSkillId.set(null);
   }
 
   removeSkillFromProfile(skillId: number): void {

@@ -64,7 +64,7 @@ public class User {
     // immédiatement l'utilisateur à créer son propre mot de passe personnalisé.
     // Une fois cela fait, l'interrupteur passera sur "Faux" (false) pour ne plus l'embêter.
     @Builder.Default
-    @Column(name = "first_login", nullable = false)
+    @Column(name = "first_login", nullable = false, columnDefinition = "boolean default true")
     private boolean firstLogin = true;
 
     // Une horloge virtuelle qui enregistre le jour et l'heure exacts 
@@ -86,4 +86,24 @@ public class User {
     // Si l'utilisateur essaie d'entrer le code après cette heure, le système lui dira "Trop tard !"
     @Column(name = "token_expiry")
     private java.time.LocalDateTime tokenExpiry;
+
+    // Le nombre de tentatives consécutives de connexion infructueuses (mot de passe incorrect).
+    @Builder.Default
+    @Column(name = "failed_login_attempts", nullable = false, columnDefinition = "integer default 0")
+    private int failedLoginAttempts = 0;
+
+    // L'horloge qui indique jusqu'à quand le compte est verrouillé après 3 échecs (5 minutes).
+    @Column(name = "locked_until")
+    private java.time.LocalDateTime lockedUntil;
+
+    // Un indicateur de blocage définitif. Si l'utilisateur dépasse la limite à nouveau après son verrouillage de 5 minutes,
+    // son compte est bloqué définitivement (accountDisabled = true) et nécessite l'intervention d'un administrateur.
+    @Builder.Default
+    @Column(name = "account_disabled", nullable = false, columnDefinition = "boolean default false")
+    private boolean accountDisabled = false;
+
+    // --- ASSOCIATION DE COLLABORATEUR (OPTIONNELLE) ---
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "employee_id", nullable = true)
+    private Employee employee;
 }

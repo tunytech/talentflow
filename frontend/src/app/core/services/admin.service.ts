@@ -39,6 +39,38 @@ export interface AppSetting {
   description?: string;
 }
 
+export interface EmployeePostAssignment {
+  id?: number;
+  jobProfile: JobProfile;
+  startDate: string;
+  endDate?: string;
+  active: boolean;
+}
+
+export interface Employee {
+  id?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  company?: Company | null;
+  jobTitle?: string;
+  keySkill?: string;
+  skillLevel?: number;
+  habilitationName?: string;
+  habilitationExpiryDate?: string;
+  active: boolean;
+  
+  // --- NOUVELLES PROPRIETES ENRICHIES ---
+  phoneNumber?: string;
+  birthDate?: string;
+  gender?: string;
+  department?: string;
+  manager?: Employee | null;
+  entryDate?: string;
+  retirementDate?: string;
+  postAssignments?: EmployeePostAssignment[];
+}
+
 export interface User {
   id?: number;
   username: string;
@@ -53,6 +85,29 @@ export interface User {
   firstName?: string; // Le prénom
   lastName?: string;  // Le nom de famille
   firstLogin?: boolean; // Si c'est la toute première connexion
+  failedLoginAttempts?: number;
+  lockedUntil?: string | null;
+  accountDisabled?: boolean;
+
+  // --- RELATION OPTIONNELLE COLLABORATEUR ---
+  employee?: Employee | null;
+}
+
+export interface EmailAlertConfig {
+  id?: number;
+  key: string;
+  name: string;
+  active: boolean;
+  recipientRole?: string;
+}
+
+export interface SystemNotification {
+  id?: number;
+  user?: User;
+  content: string;
+  acknowledged: boolean;
+  repeated: boolean;
+  createdAt: string;
 }
 
 export type SkillCriticality = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -100,6 +155,48 @@ export interface JobProfile {
   skillLinks?: SkillLinkPayload[];
 }
 
+export interface EvaluationCampaign {
+  id?: number;
+  name: string;
+  frequency: string;
+  startDate: string;
+  endDate: string;
+  status: 'PLANIFIEE' | 'EN_COURS' | 'CLOTUREE' | 'EN_RETARD';
+  company?: Company;
+}
+
+export interface EvaluationSkill {
+  id: number;
+  skillId: number;
+  skillName: string;
+  skillDescription?: string;
+  skillCriticality?: string;
+  expectedLevel: number;
+  selfLevel?: number;
+  acquiredLevel?: number;
+  managerComment?: string;
+  mandatory: boolean;
+  majorRisk: boolean;
+}
+
+export interface Evaluation {
+  id: number;
+  campaignId: number;
+  campaignName: string;
+  campaignStatus: string;
+  employeeId: number;
+  employeeName: string;
+  employeeEmail: string;
+  status: 'CREEE' | 'AUTO_EVALUATION' | 'ARBITRAGE' | 'TERMINEE';
+  selfComment?: string;
+  managerComment?: string;
+  trainingRequest?: string;
+  trainingRecommendation?: string;
+  skills: EvaluationSkill[];
+  globalScore: number;
+  majorRisk: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -111,6 +208,7 @@ export class AdminService {
   public readonly roles = signal<Role[]>([]);
   public readonly permissions = signal<Permission[]>([]);
   public readonly users = signal<User[]>([]);
+  public readonly employees = signal<Employee[]>([]);
   public readonly settings = signal<AppSetting[]>([]);
   public readonly activeCompanyId = signal<number>(1); // Default to first company
   public readonly skillCategories = signal<SkillCategory[]>([]);
@@ -138,6 +236,7 @@ export class AdminService {
   ];
 
   private mockRoles: Role[] = [];
+  private mockEmployees: Employee[] = [];
   private mockUsers: User[] = [];
   private mockSettings: { [companyId: number]: AppSetting[] } = {};
 
@@ -175,11 +274,48 @@ export class AdminService {
       }
     ];
 
+    // Seed mock employees
+    this.mockEmployees = [
+      { 
+        id: 1, firstName: 'Jean', lastName: 'Administrateur', email: 'admin@tunytech.com', company: this.mockCompanies[0], jobTitle: 'System Architect', keySkill: 'Java & Angular Architecture', skillLevel: 5, habilitationName: 'ISO 27001 Auditor', habilitationExpiryDate: '2027-01-15', active: true,
+        phoneNumber: '+33 6 12 34 56 78', birthDate: '1980-05-15', gender: 'Homme', department: 'Direction', manager: null, entryDate: '2015-01-01', retirementDate: '2045-05-15', postAssignments: []
+      },
+      { 
+        id: 2, firstName: 'Marie', lastName: 'Lefebvre', email: 'rh.france@tunytech.com', company: this.mockCompanies[3], jobTitle: 'Responsable RH', keySkill: 'Recrutement & Onboarding', skillLevel: 4, habilitationName: 'RGPD DPO Certification', habilitationExpiryDate: '2026-10-30', active: true,
+        phoneNumber: '+33 6 98 76 54 32', birthDate: '1985-11-20', gender: 'Femme', department: 'Ressources Humaines', manager: null, entryDate: '2018-06-01', retirementDate: '2050-11-20', postAssignments: []
+      },
+      { 
+        id: 3, firstName: 'Amir', lastName: 'Nouveau', email: 'nouveau@tunytech.com', company: this.mockCompanies[3], jobTitle: 'Ingénieur DevOps', keySkill: 'CI/CD & Cloud Infrastructure', skillLevel: 4, habilitationName: 'AWS Certified Practitioner', habilitationExpiryDate: '2026-09-05', active: true,
+        phoneNumber: '+33 6 11 22 33 44', birthDate: '1992-03-10', gender: 'Homme', department: 'R&D', manager: null, entryDate: '2021-09-01', retirementDate: '2057-03-10', postAssignments: []
+      },
+      { 
+        id: 4, firstName: 'Hejer', lastName: 'Ben Ali', email: 'hejer.benali@tunytech.com', company: this.mockCompanies[3], jobTitle: 'Qualité Assurance', keySkill: 'Conformité & CAPA', skillLevel: 5, habilitationName: 'ISO 9001 Lead Auditor', habilitationExpiryDate: '2026-06-12', active: true,
+        phoneNumber: '+33 6 55 66 77 88', birthDate: '1988-07-25', gender: 'Femme', department: 'Qualité', manager: null, entryDate: '2019-02-15', retirementDate: '2053-07-25', postAssignments: []
+      },
+      { 
+        id: 5, firstName: 'Jan', lastName: 'de Vries', email: 'jan.devries@tunytech.com', company: this.mockCompanies[0], jobTitle: 'Technicien Support', keySkill: 'Maintenance & Hardware', skillLevel: 3, habilitationName: 'Habilitation Électrique B2V', habilitationExpiryDate: '2026-03-18', active: true,
+        phoneNumber: '+31 6 44 55 66 77', birthDate: '1975-09-05', gender: 'Homme', department: 'Support', manager: null, entryDate: '2016-10-01', retirementDate: '2040-09-05', postAssignments: []
+      },
+      { 
+        id: 6, firstName: 'Thomas', lastName: 'Mueller', email: 't.mueller@tunytech.com', company: this.mockCompanies[1], jobTitle: 'Ingénieur DevOps', keySkill: 'Kubernetes & Security', skillLevel: 4, habilitationName: 'Kubernetes Administrator (CKA)', habilitationExpiryDate: '2026-09-05', active: true,
+        phoneNumber: '+49 170 889977', birthDate: '1990-12-01', gender: 'Non défini', department: 'R&D', manager: null, entryDate: '2020-03-01', retirementDate: '2055-12-01', postAssignments: []
+      }
+    ];
+
+    // Link mock N+1 relationships
+    this.mockEmployees[1].manager = this.mockEmployees[0]; // Marie managed by Jean
+    this.mockEmployees[2].manager = this.mockEmployees[1]; // Amir managed by Marie
+    this.mockEmployees[3].manager = this.mockEmployees[1]; // Hejer managed by Marie
+    this.mockEmployees[4].manager = this.mockEmployees[0]; // Jan managed by Jean
+    this.mockEmployees[5].manager = this.mockEmployees[0]; // Thomas managed by Jean
+
     // Seed mock users
     this.mockUsers = [
-      { id: 1, username: 'admin', email: 'admin@tunytech.com', active: true, company: this.mockCompanies[0], role: this.mockRoles[0] },
-      { id: 2, username: 'rh.france', email: 'rh.france@tunytech.com', active: true, company: this.mockCompanies[3], role: this.mockRoles[2] },
-      { id: 3, username: 'm.dupont', email: 'm.dupont@tunytech.com', active: true, company: this.mockCompanies[1], role: this.mockRoles[1] }
+      { id: 1, username: 'admin', email: 'admin@tunytech.com', active: true, company: this.mockCompanies[0], role: this.mockRoles[0], employee: this.mockEmployees[0] },
+      { id: 2, username: 'rh.france', email: 'rh.france@tunytech.com', active: true, company: this.mockCompanies[3], role: this.mockRoles[2], employee: this.mockEmployees[1] },
+      { id: 3, username: 'nouveau.employe', email: 'nouveau@tunytech.com', active: true, company: this.mockCompanies[3], role: this.mockRoles[1], employee: this.mockEmployees[2] },
+      { id: 4, username: 'hejer.benali', email: 'hejer.benali@tunytech.com', active: true, company: this.mockCompanies[3], role: this.mockRoles[3], employee: this.mockEmployees[3] },
+      { id: 5, username: 'jan.devries', email: 'jan.devries@tunytech.com', active: true, company: this.mockCompanies[0], role: this.mockRoles[1], employee: this.mockEmployees[4] }
     ];
 
     // Seed mock settings for Parent (id 1)
@@ -209,6 +345,7 @@ export class AdminService {
     await this.fetchPermissions();
     await this.fetchRoles();
     await this.fetchUsers();
+    await this.fetchEmployees();
     await this.fetchSettings(this.activeCompanyId());
   }
 
@@ -440,6 +577,68 @@ export class AdminService {
     return true;
   }
 
+  // --- EMPLOYEES API (CRUD DUAL-MODE) ---
+  public async fetchEmployees() {
+    try {
+      const res = await fetch(`${this.baseUrl}/employees`);
+      if (res.ok) {
+        const data = await res.json();
+        this.employees.set(data);
+        return;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    this.employees.set([...this.mockEmployees]);
+  }
+
+  public async saveEmployee(employee: Employee): Promise<Employee> {
+    try {
+      const isEdit = employee.id !== undefined;
+      const url = isEdit ? `${this.baseUrl}/employees/${employee.id}` : `${this.baseUrl}/employees`;
+      const res = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(employee)
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        await this.fetchEmployees();
+        await this.fetchUsers(); // refresh users too in case employee state changed
+        return saved;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    
+    if (employee.id !== undefined) {
+      this.mockEmployees = this.mockEmployees.map(e => e.id === employee.id ? { ...e, ...employee } : e);
+    } else {
+      const newId = Math.max(...this.mockEmployees.map(e => e.id || 0)) + 1;
+      const newEmployee = { ...employee, id: newId, active: true };
+      this.mockEmployees.push(newEmployee);
+      employee = newEmployee;
+    }
+    await this.fetchEmployees();
+    return employee;
+  }
+
+  public async deleteEmployee(id: number): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.baseUrl}/employees/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        await this.fetchEmployees();
+        await this.fetchUsers();
+        return true;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    this.mockEmployees = this.mockEmployees.map(e => e.id === id ? { ...e, active: false } : e);
+    await this.fetchEmployees();
+    return true;
+  }
+
   // --- SKILLS REFERENTIAL API ---
 
   public async fetchSkillCategories(companyId: number): Promise<void> {
@@ -595,6 +794,70 @@ export class AdminService {
     return false;
   }
 
+  // --- ADDITIONAL ACTIONS: USER UNLOCK, EMAIL ALERTS & NOTIFICATIONS ---
+
+  public async unlockUser(userId: number): Promise<User> {
+    const res = await fetch(`${this.baseUrl}/users/${userId}/unlock`, {
+      method: 'POST'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      await this.fetchUsers();
+      return data;
+    }
+    throw new Error("Impossible de déverrouiller l'utilisateur.");
+  }
+
+  public async fetchEmailAlerts(): Promise<EmailAlertConfig[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/email-alerts`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+    return [
+      { id: 1, key: 'CAMPAIGN_OPEN_ALERT', name: 'La campagne de recrutement est ouverte', active: true, recipientRole: 'Manager' },
+      { id: 2, key: 'CAMPAIGN_CLOSE_ALERT', name: 'La campagne de recrutement est fermée', active: false, recipientRole: 'Responsable RH' },
+      { id: 3, key: 'EVAL_START_ALERT', name: 'La campagne d\'évaluation a commencé', active: true, recipientRole: 'Tous' },
+      { id: 4, key: 'EVAL_CLOSE_ALERT', name: 'La campagne d\'évaluation est cloturée', active: true, recipientRole: 'Tous' },
+      { id: 5, key: 'HABILITATION_EXPIRY_ALERT', name: 'L\'habilitation X va bientôt expirer', active: true, recipientRole: 'Responsable RH' }
+    ];
+  }
+
+  public async toggleEmailAlert(id: number): Promise<EmailAlertConfig> {
+    const res = await fetch(`${this.baseUrl}/email-alerts/${id}/toggle`, {
+      method: 'POST'
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    throw new Error("Impossible de modifier l'alerte.");
+  }
+
+  public async fetchNotifications(): Promise<SystemNotification[]> {
+    try {
+      const res = await fetch(`${this.baseUrl}/notifications`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  }
+
+  public async acknowledgeNotification(id: number): Promise<SystemNotification> {
+    const res = await fetch(`${this.baseUrl}/notifications/${id}/acknowledge`, {
+      method: 'POST'
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    throw new Error("Impossible d'acquitter la notification.");
+  }
+
   public async fetchReferentials(companyId: number): Promise<void> {
     this.activeCompanyId.set(companyId);
     await Promise.all([
@@ -602,5 +865,307 @@ export class AdminService {
       this.fetchSkills(companyId),
       this.fetchJobProfiles(companyId)
     ]);
+  }
+
+  // --- MOCK EVALUATIONS STORE ---
+  private mockCampaigns: EvaluationCampaign[] = [
+    { id: 1, name: "Campagne Annuelle d'Évaluation 2026", frequency: 'Annuelle', startDate: '2026-05-01', endDate: '2026-06-30', status: 'EN_COURS' }
+  ];
+
+  private mockEvaluations: Evaluation[] = [
+    {
+      id: 1,
+      campaignId: 1,
+      campaignName: "Campagne Annuelle d'Évaluation 2026",
+      campaignStatus: 'EN_COURS',
+      employeeId: 2, // Marie Lefebvre
+      employeeName: 'Marie Lefebvre',
+      employeeEmail: 'rh.france@tunytech.com',
+      status: 'ARBITRAGE',
+      selfComment: "L'année a été excellente. Je souhaite me perfectionner sur la gestion agile et DevOps pour accompagner les équipes techniques.",
+      trainingRequest: "Formation DevOps agile pour non-techniques",
+      skills: [
+        { id: 10, skillId: 6, skillName: 'Leadership', expectedLevel: 3, selfLevel: 3, mandatory: true, majorRisk: false },
+        { id: 11, skillId: 7, skillName: 'Communication client', expectedLevel: 4, selfLevel: 4, mandatory: true, majorRisk: false }
+      ],
+      globalScore: 100,
+      majorRisk: false
+    },
+    {
+      id: 2,
+      campaignId: 1,
+      campaignName: "Campagne Annuelle d'Évaluation 2026",
+      campaignStatus: 'EN_COURS',
+      employeeId: 6, // Thomas Mueller
+      employeeName: 'Thomas Mueller',
+      employeeEmail: 't.mueller@tunytech.com',
+      status: 'TERMINEE',
+      selfComment: "J'ai beaucoup travaillé DevOps cette année. Sur la sécurité ISO 27001, je dois encore progresser.",
+      managerComment: "Excellent travail sur DevOps et Java. Attention cependant aux notions de sécurité ISO 27001 indispensables sur les projets DevOps.",
+      trainingRecommendation: "Certification ISO 27001 Auditor",
+      skills: [
+        { id: 20, skillId: 3, skillName: 'DevOps', expectedLevel: 5, selfLevel: 4, acquiredLevel: 5, mandatory: true, majorRisk: false },
+        { id: 21, skillId: 1, skillName: 'Java', expectedLevel: 3, selfLevel: 3, acquiredLevel: 3, mandatory: false, majorRisk: false },
+        { id: 22, skillId: 4, skillName: 'ISO 27001', expectedLevel: 3, selfLevel: 2, acquiredLevel: 2, managerComment: "Niveau insuffisant sur les audits de sécurité. Une formation est fortement recommandée.", mandatory: true, majorRisk: true }
+      ],
+      globalScore: 91,
+      majorRisk: true
+    },
+    {
+      id: 3,
+      campaignId: 1,
+      campaignName: "Campagne Annuelle d'Évaluation 2026",
+      campaignStatus: 'EN_COURS',
+      employeeId: 3, // Amir Nouveau
+      employeeName: 'Amir Nouveau',
+      employeeEmail: 'nouveau@tunytech.com',
+      status: 'CREEE',
+      skills: [
+        { id: 30, skillId: 3, skillName: 'DevOps', expectedLevel: 5, mandatory: true, majorRisk: false },
+        { id: 31, skillId: 1, skillName: 'Java', expectedLevel: 3, mandatory: false, majorRisk: false },
+        { id: 32, skillId: 4, skillName: 'ISO 27001', expectedLevel: 3, mandatory: true, majorRisk: false }
+      ],
+      globalScore: 0,
+      majorRisk: false
+    }
+  ];
+
+  // --- EVALUATIONS API (DUAL-MODE) ---
+  private readonly evalBaseUrl = 'http://localhost:8080/api/evaluations';
+
+  public async fetchCampaigns(companyId: number): Promise<EvaluationCampaign[]> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/campaigns?companyId=${companyId}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+    return [...this.mockCampaigns];
+  }
+
+  public async saveCampaign(campaign: EvaluationCampaign): Promise<EvaluationCampaign> {
+    try {
+      const isEdit = campaign.id !== undefined;
+      const url = isEdit ? `${this.evalBaseUrl}/campaigns/${campaign.id}` : `${this.evalBaseUrl}/campaigns`;
+      const res = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaign)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+    if (campaign.id !== undefined) {
+      this.mockCampaigns = this.mockCampaigns.map(c => c.id === campaign.id ? { ...c, ...campaign } : c);
+    } else {
+      const newId = Math.max(...this.mockCampaigns.map(c => c.id || 0), 0) + 1;
+      const newCampaign = { ...campaign, id: newId };
+      this.mockCampaigns.push(newCampaign);
+      campaign = newCampaign;
+    }
+    return campaign;
+  }
+
+  public async fetchEvaluationsByCampaign(campaignId: number): Promise<Evaluation[]> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/campaign/${campaignId}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data.map((e: any) => this.calculateEvaluationStats(e));
+      }
+    } catch {
+      // ignore
+    }
+    return this.mockEvaluations.filter(e => e.campaignId === campaignId);
+  }
+
+  public async fetchEvaluationsByEmployee(employeeId: number): Promise<Evaluation[]> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/employee/${employeeId}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data.map((e: any) => this.calculateEvaluationStats(e));
+      }
+    } catch {
+      // ignore
+    }
+    return this.mockEvaluations.filter(e => e.employeeId === employeeId);
+  }
+
+  public async fetchEvaluationsByManager(managerId: number): Promise<Evaluation[]> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/manager/${managerId}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data.map((e: any) => this.calculateEvaluationStats(e));
+      }
+    } catch {
+      // ignore
+    }
+    if (managerId === 2) {
+      return this.mockEvaluations.filter(e => e.employeeId === 3);
+    } else if (managerId === 1) {
+      return this.mockEvaluations.filter(e => e.employeeId === 2 || e.employeeId === 6);
+    }
+    return [];
+  }
+
+  public async fetchEvaluationDetails(id: number): Promise<Evaluation> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/${id}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+    const found = this.mockEvaluations.find(e => e.id === id);
+    if (found) return found;
+    throw new Error("Evaluation non trouvée.");
+  }
+
+  public async submitSelfEvaluation(id: number, payload: any): Promise<Evaluation> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/${id}/self`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+
+    this.mockEvaluations = this.mockEvaluations.map(e => {
+      if (e.id === id) {
+        const updatedSkills = e.skills.map(es => {
+          const matching = payload.skills?.find((ps: any) => ps.id === es.id);
+          if (matching) {
+            return { ...es, selfLevel: matching.selfLevel };
+          }
+          return es;
+        });
+        const updated = {
+          ...e,
+          selfComment: payload.selfComment,
+          trainingRequest: payload.trainingRequest,
+          status: 'ARBITRAGE' as const,
+          skills: updatedSkills
+        };
+        return this.calculateEvaluationStats(updated);
+      }
+      return e;
+    });
+
+    return this.fetchEvaluationDetails(id);
+  }
+
+  public async submitArbitrage(id: number, payload: any): Promise<Evaluation> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/${id}/arbitrage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+
+    this.mockEvaluations = this.mockEvaluations.map(e => {
+      if (e.id === id) {
+        const updatedSkills = e.skills.map(es => {
+          const matching = payload.skills?.find((ps: any) => ps.id === es.id);
+          if (matching) {
+            const skillRisk = matching.acquiredLevel < es.expectedLevel && (es.mandatory || es.skillCriticality === 'HIGH');
+            return { 
+              ...es, 
+              acquiredLevel: matching.acquiredLevel, 
+              managerComment: matching.managerComment,
+              majorRisk: skillRisk 
+            };
+          }
+          return es;
+        });
+        const updated = {
+          ...e,
+          managerComment: payload.managerComment,
+          trainingRecommendation: payload.trainingRecommendation,
+          status: 'TERMINEE' as const,
+          skills: updatedSkills
+        };
+        return this.calculateEvaluationStats(updated);
+      }
+      return e;
+    });
+
+    return this.fetchEvaluationDetails(id);
+  }
+
+  public async checkCampaignAlerts(): Promise<any> {
+    try {
+      const res = await fetch(`${this.evalBaseUrl}/campaigns/check-alerts`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // ignore
+    }
+    return {
+      message: "Simulation des relances : Emails envoyés et notifications créées.",
+      J7Notifications: 6,
+      J1Notifications: 6,
+      lateNotifications: 2
+    };
+  }
+
+  private calculateEvaluationStats(evalObj: any): Evaluation {
+    let totalExpected = 0;
+    let totalAcquiredMet = 0;
+    let hasMajorRisk = false;
+
+    const skills = (evalObj.skills || []).map((es: any) => {
+      const expected = es.expectedLevel || 3;
+      const acquired = es.acquiredLevel;
+      totalExpected += expected;
+      if (acquired !== undefined && acquired !== null) {
+        totalAcquiredMet += Math.min(acquired, expected);
+      }
+
+      let skillRisk = false;
+      if (acquired !== undefined && acquired !== null && acquired < expected) {
+        if (es.mandatory || es.skillCriticality === 'HIGH' || es.skill?.criticality === 'HIGH') {
+          skillRisk = true;
+          hasMajorRisk = true;
+        }
+      }
+
+      return {
+        ...es,
+        majorRisk: skillRisk
+      };
+    });
+
+    const globalScore = totalExpected > 0 
+      ? Math.round((totalAcquiredMet / totalExpected) * 100) 
+      : 100;
+
+    return {
+      ...evalObj,
+      skills,
+      globalScore,
+      majorRisk: hasMajorRisk
+    };
   }
 }

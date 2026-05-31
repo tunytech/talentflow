@@ -6,6 +6,8 @@ import com.talentflow.model.User;
 import com.talentflow.repository.AppSettingRepository;
 import com.talentflow.repository.PasswordHistoryRepository;
 import com.talentflow.repository.UserRepository;
+import com.talentflow.repository.SystemNotificationRepository;
+import com.talentflow.model.SystemNotification;
 import com.talentflow.util.PasswordValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,6 +37,9 @@ public class AuthController {
     private PasswordHistoryRepository passwordHistoryRepository;
 
     @Autowired
+    private SystemNotificationRepository systemNotificationRepository;
+
+    @Autowired
     private PasswordValidator passwordValidator;
 
     // Notre machine à chiffrer les codes secrets
@@ -58,21 +63,86 @@ public class AuthController {
 
         User user = userOpt.get();
 
-        // B. Vérification de l'état actif du compte
-        if (!user.isActive()) {
+        // B. Vérification de l'état actif ou bloqué du compte
+        if (user.isAccountDisabled() || !user.isActive()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "Ce compte est désactivé. Veuillez contacter votre administrateur."));
+                    .body(Map.of("message", "Ce compte est désactivé ou bloqué définitivement. Veuillez contacter votre administrateur."));
         }
 
-        // C. Comparaison du mot de passe tapé avec celui stocké en base
+        // C. Chargement des paramètres globaux de sécurité
+        int maxAttempts = 3;
+        int lockoutMinutes = 5;
+        if (user.getCompany() != null) {
+            Optional<AppSetting> attemptsSetting = appSettingRepository.findByCompanyIdAndKey(
+                    user.getCompany().getId(), "MAX_LOGIN_ATTEMPTS"
+            );
+            if (attemptsSetting.isPresent()) {
+                try {
+                    maxAttempts = Integer.parseInt(attemptsSetting.get().getValue());
+                } catch (NumberFormatException e) {}
+            }
+
+            Optional<AppSetting> durationSetting = appSettingRepository.findByCompanyIdAndKey(
+                    user.getCompany().getId(), "LOCKOUT_DURATION_MINUTES"
+            );
+            if (durationSetting.isPresent()) {
+                try {
+                    lockoutMinutes = Integer.parseInt(durationSetting.get().getValue());
+                } catch (NumberFormatException e) {}
+            }
+        }
+
+        // D. Vérification du verrouillage temporaire (Locked Until)
+        if (user.getLockedUntil() != null) {
+            if (LocalDateTime.now().isBefore(user.getLockedUntil())) {
+                long secondsRemaining = java.time.Duration.between(LocalDateTime.now(), user.getLockedUntil()).toSeconds();
+                long minutesRemaining = secondsRemaining / 60;
+                secondsRemaining = secondsRemaining % 60;
+                
+                String timeStr = minutesRemaining > 0 
+                        ? minutesRemaining + " minute(s) et " + secondsRemaining + " seconde(s)"
+                        : secondsRemaining + " seconde(s)";
+                        
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "Ce compte est temporairement verrouillé suite à plusieurs échecs successifs. Veuillez réessayer dans " + timeStr + "."));
+            }
+        }
+
+        // E. Comparaison du mot de passe tapé avec celui stocké en base
         if (!encoder.matches(request.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Le mot de passe saisi est incorrect. Retentez votre chance !"));
+            int currentAttempts = user.getFailedLoginAttempts() + 1;
+            user.setFailedLoginAttempts(currentAttempts);
+
+            if (currentAttempts == maxAttempts) {
+                // Premier verrouillage de X minutes
+                user.setLockedUntil(LocalDateTime.now().plusMinutes(lockoutMinutes));
+                userRepository.save(user);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "Ce compte est temporairement verrouillé pour " + lockoutMinutes + " minutes suite à " + maxAttempts + " échecs successifs."));
+            } else if (currentAttempts > maxAttempts) {
+                // Déjà verrouillé précédemment, nouvelle erreur après le verrouillage -> Blocage définitif !
+                user.setAccountDisabled(true);
+                user.setActive(false); // Rendre inactif
+                userRepository.save(user);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("message", "Sécurité : Votre compte a été désactivé définitivement après un échec supplémentaire. Veuillez contacter impérativement un administrateur."));
+            } else {
+                // Erreur simple, on décompte les essais restants
+                userRepository.save(user);
+                int remaining = maxAttempts - currentAttempts;
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Le mot de passe saisi est incorrect. Il vous reste " + remaining + " tentative(s) avant le verrouillage du compte."));
+            }
         }
 
-        // D. CAS 1 : PREMIÈRE CONNEXION FORCÉE
+        // F. CAS 1 : PREMIÈRE CONNEXION FORCÉE
         // Si l'utilisateur ne s'est jamais connecté (firstLogin est vrai)
         if (user.isFirstLogin()) {
+            // Remise à zéro des échecs en cas de mot de passe correct
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            userRepository.save(user);
+
             return ResponseEntity.ok(Map.of(
                     "firstLoginRequired", true,
                     "userId", user.getId(),
@@ -83,8 +153,7 @@ public class AuthController {
             ));
         }
 
-        // E. CAS 2 : EXPIRATION DU MOT DE PASSE (6 MOIS / 180 JOURS)
-        // Nous allons chercher combien de temps un mot de passe a le droit de vivre dans les paramètres de la société
+        // G. CAS 2 : EXPIRATION DU MOT DE PASSE (6 MOIS / 180 JOURS)
         int expiryDays = 180;
         if (user.getCompany() != null) {
             Optional<AppSetting> setting = appSettingRepository.findByCompanyIdAndKey(
@@ -107,6 +176,11 @@ public class AuthController {
 
         // Si la date actuelle dépasse la date du dernier changement + le nombre de jours autorisés
         if (LocalDateTime.now().isAfter(lastChanged.plusDays(expiryDays))) {
+            // Remise à zéro des échecs en cas de mot de passe correct
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            userRepository.save(user);
+
             return ResponseEntity.ok(Map.of(
                     "passwordExpired", true,
                     "userId", user.getId(),
@@ -117,20 +191,38 @@ public class AuthController {
             ));
         }
 
-        // F. CONNEXION RÉUSSIE !
+        // H. CONNEXION RÉUSSIE !
+        // Remise à zéro des compteurs de sécurité
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        userRepository.save(user);
+
+        // Chargement des notifications actives de l'utilisateur
+        List<SystemNotification> notificationEntities = systemNotificationRepository.findByUserAndAcknowledgedFalseOrderByCreatedAtDesc(user);
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        for (SystemNotification n : notificationEntities) {
+            notifications.add(Map.of(
+                "id", n.getId(),
+                "content", n.getContent(),
+                "createdAt", n.getCreatedAt().toString()
+            ));
+        }
+
         // Nous renvoyons toutes les informations nécessaires à l'affichage (Société, Rôle, Prénom, Nom)
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "userId", user.getId(),
-                "username", user.getUsername(),
-                "email", user.getEmail(),
-                "firstName", user.getFirstName() != null ? user.getFirstName() : "",
-                "lastName", user.getLastName() != null ? user.getLastName() : "",
-                "role", user.getRole() != null ? user.getRole().getName() : "Collaborateur",
-                "companyId", user.getCompany() != null ? user.getCompany().getId() : "",
-                "companyName", user.getCompany() != null ? user.getCompany().getName() : "",
-                "logo", user.getCompany() != null && user.getCompany().getLogo() != null ? user.getCompany().getLogo() : ""
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("userId", user.getId());
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("firstName", user.getFirstName() != null ? user.getFirstName() : "");
+        response.put("lastName", user.getLastName() != null ? user.getLastName() : "");
+        response.put("role", user.getRole() != null ? user.getRole().getName() : "Collaborateur");
+        response.put("companyId", user.getCompany() != null ? user.getCompany().getId() : "");
+        response.put("companyName", user.getCompany() != null ? user.getCompany().getName() : "");
+        response.put("logo", user.getCompany() != null && user.getCompany().getLogo() != null ? user.getCompany().getLogo() : "");
+        response.put("notifications", notifications);
+
+        return ResponseEntity.ok(response);
     }
 
     // ==========================================

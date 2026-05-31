@@ -16,6 +16,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = {"parent", "subCompanies"})
 @EqualsAndHashCode(exclude = {"parent", "subCompanies"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Company {
 
     @Id

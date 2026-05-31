@@ -18,13 +18,41 @@
     </div>
     
     <nav class="sidebar-nav">
-      <a class="nav-item active" (click)="setActiveTab('companies')">
+      <a class="nav-item" [class.active]="activeTab() !== 'employees' && activeTab() !== 'priority-dashboard' && activeTab() !== 'evaluation-campaigns' && activeTab() !== 'skills-evaluation' && activeTab() !== 'certifications'" (click)="setActiveTab('companies')">
         <span class="nav-icon">⚙️</span>
         <span class="nav-label" *ngIf="!isSidebarCollapsed()">{{ t('nav_admin') }}</span>
       </a>
-      <a class="nav-item" (click)="setActiveTab('priority')">
+      <a class="nav-item" [class.active]="activeTab() === 'priority-dashboard'" (click)="setActiveTab('priority-dashboard')">
         <span class="nav-icon">📊</span>
         <span class="nav-label" *ngIf="!isSidebarCollapsed()">{{ t('nav_dashboard') }}</span>
+      </a>
+      <a class="nav-item" [class.active]="activeTab() === 'employees'" (click)="setActiveTab('employees')">
+        <span class="nav-icon">👔</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed()">Gestion des Collaborateurs</span>
+      </a>
+
+      <!-- Collapsable Gestion des Compétences -->
+      <div class="nav-item-collapsible">
+        <a class="nav-item" [class.active]="activeTab() === 'evaluation-campaigns' || activeTab() === 'skills-evaluation'" (click)="isSkillsMenuExpanded.update(v => !v); $event.stopPropagation()">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label" *ngIf="!isSidebarCollapsed()">Gestion des compétences</span>
+          <span class="collapse-arrow" *ngIf="!isSidebarCollapsed()">{{ isSkillsMenuExpanded() ? '▼' : '►' }}</span>
+        </a>
+        <div class="nav-sub-items" *ngIf="isSkillsMenuExpanded() && !isSidebarCollapsed()">
+          <a class="nav-sub-item" [class.active]="activeTab() === 'evaluation-campaigns'" (click)="setActiveTab('evaluation-campaigns')">
+            <span class="sub-nav-icon">📅</span>
+            <span class="sub-nav-label">Gestion des campagnes d'évaluation</span>
+          </a>
+          <a class="nav-sub-item" [class.active]="activeTab() === 'skills-evaluation'" (click)="setActiveTab('skills-evaluation')">
+            <span class="sub-nav-icon">🎯</span>
+            <span class="sub-nav-label">Évaluation des compétences</span>
+          </a>
+        </div>
+      </div>
+
+      <a class="nav-item" [class.active]="activeTab() === 'certifications'" (click)="setActiveTab('certifications')">
+        <span class="nav-icon">📜</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed()">Gestion de certification et habilitation</span>
       </a>
     </nav>
     
@@ -33,12 +61,18 @@
     </div>
   </aside>
 
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="mobile-sidebar-overlay" *ngIf="!isSidebarCollapsed()" (click)="toggleSidebar()"></div>
+
   <!-- Main View Area -->
   <main class="main-content">
     <!-- Top Header -->
     <header class="top-header">
       <div class="header-left">
-        <h2>{{ t('nav_admin') }} - Talentflow RH</h2>
+        <button type="button" class="mobile-menu-btn" (click)="toggleSidebar()" title="Toggle Sidebar">
+          ☰
+        </button>
+        <h2>{{ t('nav_admin') }}<span class="header-subtitle"> - Talentflow RH</span></h2>
       </div>
       <div class="header-right">
         <!-- Theme Selector -->
@@ -121,633 +155,1440 @@
       </div>
     </header>
 
-    <!-- Sub-tab Navbar -->
-    <div class="sub-navbar">
-      <button class="sub-nav-btn" [class.active]="activeTab() === 'companies'" (click)="setActiveTab('companies')">
-        🏢 {{ t('tab_companies') }}
-      </button>
-      <button class="sub-nav-btn" [class.active]="activeTab() === 'roles'" (click)="setActiveTab('roles')">
-        🛡️ {{ t('tab_roles') }}
-      </button>
-      <button class="sub-nav-btn" [class.active]="activeTab() === 'settings'" (click)="setActiveTab('settings')">
-        ⚙️ {{ t('tab_settings') }}
-      </button>
-      <button class="sub-nav-btn" [class.active]="activeTab() === 'priority'" (click)="setActiveTab('priority')">
-        📊 {{ t('tab_priority') }}
-      </button>
-    </div>
-
-    <!-- Active Tab Content Area -->
-    <div class="content-body scrollable-content">
+    <!-- Beautiful, Sleek, Premium Vertical Tabbed Container -->
+    <div class="admin-tabbed-container" [class.full-width-container]="activeTab() === 'employees' || activeTab() === 'priority-dashboard' || activeTab() === 'evaluation-campaigns' || activeTab() === 'skills-evaluation' || activeTab() === 'certifications'">
       
-      <!-- TOAST SUCCESS ALERTS -->
-      <div class="toast-alert" *ngIf="showToast()">
-        <span class="toast-icon">✅</span>
-        <span class="toast-msg">{{ toastMessage() }}</span>
-      </div>
-
-      <!-- TAB 1: COMPANIES & SUBSIDIARIES -->
-      <div *ngIf="activeTab() === 'companies'" class="tab-pane-layout">
-        <!-- Conteneur gauche pour la hiérarchie -->
-        <div class="pane-left card-glass">
-          <div class="pane-header flex-column-mobile">
-            <h3>{{ t('tab_companies') }}</h3>
-            
-            <!-- BOUTON SÉLECTEUR DE VUE D'ORGANIGRAMME (VUE ARBRE vs VUE DÉPLIÉE HORIZONTALE) -->
-            <div class="org-view-switcher">
-              <button 
-                type="button" 
-                class="switcher-btn" 
-                [class.active]="companyViewMode() === 'tree'" 
-                (click)="companyViewMode.set('tree')"
-                title="Afficher sous forme de liste arborescente verticale">
-                🏢 Liste
-              </button>
-              <button 
-                type="button" 
-                class="switcher-btn" 
-                [class.active]="companyViewMode() === 'chart'" 
-                (click)="companyViewMode.set('chart')"
-                title="Afficher sous forme de rectangles multiniveaux (arbre généalogique)">
-                📊 Organigramme
-              </button>
-            </div>
-
-            <button class="btn btn-primary btn-sm" (click)="onAddNewRootCompany()">
-              + {{ t('btn_add_company') }}
-            </button>
-          </div>
-
-          <!-- RENDU 1 : LISTE ARBORESCENTE CLASSIQUE VERTICALE -->
-          <div class="tree-wrapper mt-3" *ngIf="companyViewMode() === 'tree'">
-            <app-company-tree 
-              *ngFor="let comp of rootCompanies()" 
-              [company]="comp" 
-              [selectedCompanyId]="selectedCompany()?.id || 0"
-              (selectCompany)="onSelectCompany($event)"
-              (addChild)="onAddChildSubsidiary($event)"
-              (editCompany)="onEditCompany($event)"
-            ></app-company-tree>
-          </div>
-
-          <!-- RENDU 2 : ORGANIGRAMME HIÉRARCHIQUE SOUS FORME DE RECTANGLES GRAPHISÉS -->
-          <!-- Le conteneur scrollable permet de faire défiler l'organigramme s'il est très large en local -->
-          <div class="org-chart-viewport mt-3" *ngIf="companyViewMode() === 'chart'">
-            <div class="org-chart-tree-container">
-              <app-company-org-chart 
-                *ngFor="let comp of rootCompanies()" 
-                [company]="comp" 
-                [selectedCompanyId]="selectedCompany()?.id || 0"
-                (selectCompany)="onEditCompany($event)"
-              ></app-company-org-chart>
-            </div>
-          </div>
-        </div>
+      <!-- Vertical Sidebar for Admin Navigation -->
+      <aside class="admin-tab-sidebar card-glass" *ngIf="activeTab() !== 'employees' && activeTab() !== 'priority-dashboard' && activeTab() !== 'evaluation-campaigns' && activeTab() !== 'skills-evaluation' && activeTab() !== 'certifications'">
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'companies'" (click)="setActiveTab('companies')">
+          <span class="tab-btn-icon">🏢</span>
+          <span class="tab-btn-label">Sociétés & Filiales</span>
+        </button>
         
-        <div class="pane-right card-glass" *ngIf="selectedCompany() || isAddingSubsidiary()">
-          <h3>{{ isAddingSubsidiary() ? t('btn_add_child') : t('fields_company_details') }}</h3>
-          
-          <form (submit)="onSaveCompany($event)" class="mt-3">
-            <div class="form-group" *ngIf="isAddingSubsidiary() && parentCompanyForSubsidiary()">
-              <label class="form-label">{{ t('fields_company_parent') }}</label>
-              <input type="text" [value]="parentCompanyForSubsidiary()!.name" class="form-input" disabled />
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">{{ t('col_name') }}</label>
-              <input type="text" [(ngModel)]="companyFormModel.name" name="companyName" class="form-input" required placeholder="e.g. Tunytech Europe" />
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">{{ t('col_siret') }}</label>
-              <input type="text" [(ngModel)]="companyFormModel.vatNumber" name="companyVat" class="form-input" placeholder="e.g. FR8812738" />
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group col">
-                <label class="form-label">{{ t('col_country') }}</label>
-                <input type="text" [(ngModel)]="companyFormModel.country" name="companyCountry" class="form-input" placeholder="e.g. France" />
-              </div>
-              <div class="form-group col">
-                <label class="form-label">{{ t('col_city') }}</label>
-                <input type="text" [(ngModel)]="companyFormModel.city" name="companyCity" class="form-input" placeholder="e.g. Paris" />
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">{{ t('col_address') }}</label>
-              <input type="text" [(ngModel)]="companyFormModel.address" name="companyAddress" class="form-input" placeholder="e.g. 10 Avenue des Champs" />
-            </div>
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'users'" (click)="setActiveTab('users')">
+          <span class="tab-btn-icon">👥</span>
+          <span class="tab-btn-label">Comptes Utilisateurs</span>
+        </button>
+        
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'job-profiles'" (click)="setActiveTab('job-profiles')">
+          <span class="tab-btn-icon">💼</span>
+          <span class="tab-btn-label">Profils & Fonctions</span>
+        </button>
+        
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'skills-mapping'" (click)="setActiveTab('skills-mapping')">
+          <span class="tab-btn-icon">🎯</span>
+          <span class="tab-btn-label">Compétences & Fonctions</span>
+        </button>
+        
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'security'" (click)="setActiveTab('security')">
+          <span class="tab-btn-icon">🛡️</span>
+          <span class="tab-btn-label">Sécurité & Paramètres</span>
+        </button>
+        
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'email-alerts'" (click)="setActiveTab('email-alerts')">
+          <span class="tab-btn-icon">✉️</span>
+          <span class="tab-btn-label">Alertes E-mails</span>
+        </button>
+        
+        <button class="admin-tab-btn" [class.active]="activeTab() === 'connection-notifications'" (click)="setActiveTab('connection-notifications')">
+          <span class="tab-btn-icon">🔔</span>
+          <span class="tab-btn-label">Notifications Connexion</span>
+        </button>
+      </aside>
 
-            <div class="form-group">
-              <label class="form-label">{{ t('col_contact') }}</label>
-              <input type="text" [(ngModel)]="companyFormModel.contactInfo" name="companyContact" class="form-input" placeholder="e.g. contact@tunytech.com" />
-            </div>
-
-            <!-- CHAMP D'IMPORTATION DU LOGO DE LA SOCIÉTÉ (UPLOAD DE VRAI FICHIER) -->
-            <div class="form-group">
-              <label class="form-label">{{ t('fields_company_logo') }}</label>
-              
-              <!-- Aperçu du logo s'il a déjà été converti en Base64 -->
-              <div class="logo-upload-preview" *ngIf="companyFormModel.logo">
-                <img [src]="companyFormModel.logo" alt="Logo de l'entreprise" class="logo-thumbnail" />
-                <button type="button" class="btn btn-secondary btn-sm" (click)="companyFormModel.logo = ''" title="Supprimer le logo actuel">
-                  {{ t('btn_delete_logo') }}
-                </button>
-              </div>
-
-              <!-- Sélecteur de fichier réel sur Windows -->
-              <input 
-                type="file" 
-                (change)="onLogoFileSelected($event)" 
-                accept=".png,.jpg,.jpeg,.svg,.gif,.webp,.bmp,.ico"
-                class="form-input" />
-              <small class="text-muted">{{ t('fields_company_logo_desc') }}</small>
-            </div>
-            
-            <div class="form-actions mt-3">
-              <button type="submit" class="btn btn-primary">{{ t('btn_save') }}</button>
-              <button type="button" class="btn btn-secondary" (click)="onCancelCompanyForm()">{{ t('btn_cancel') }}</button>
-              <button type="button" *ngIf="!isAddingSubsidiary() && selectedCompany()?.id" class="btn btn-danger" (click)="onDeleteCompany()">
-                {{ t('btn_delete') }}
-              </button>
-            </div>
-          </form>
+      <!-- Active Tab Pane Area -->
+      <div class="admin-tab-content scrollable-content">
+        
+        <!-- TOAST SUCCESS ALERTS -->
+        <div class="toast-alert" *ngIf="showToast()">
+          <span class="toast-icon">✅</span>
+          <span class="toast-msg">{{ toastMessage() }}</span>
         </div>
-      </div>
 
-      <!-- TAB 2: USERS & ROLES -->
-      <div *ngIf="activeTab() === 'roles'" class="tab-pane-layout-vertical">
-        <!-- Accounts User table -->
-        <div class="card-glass">
-          <div class="pane-header">
-            <h3>{{ t('users_title') }}</h3>
-            <button class="btn btn-primary btn-sm" (click)="onOpenUserCreate()">{{ t('btn_add_user') }}</button>
+        <!-- 1. TAB: COMPANIES & SUBSIDIARIES -->
+        <div *ngIf="activeTab() === 'companies'" class="tab-pane-layout animate-fade">
+          <!-- Left hierarchy tree -->
+          <div class="pane-left card-glass">
+            <div class="pane-header flex-column-mobile">
+              <h3>{{ t('tab_companies') }}</h3>
+              <div class="org-view-switcher">
+                <button type="button" class="switcher-btn" [class.active]="companyViewMode() === 'tree'" (click)="companyViewMode.set('tree')">🏢 Liste</button>
+                <button type="button" class="switcher-btn" [class.active]="companyViewMode() === 'chart'" (click)="companyViewMode.set('chart')">📊 Organigramme</button>
+              </div>
+              <button class="btn btn-primary btn-sm" (click)="onAddNewRootCompany()">+ {{ t('btn_add_company') }}</button>
+            </div>
+            <!-- Tree verticale -->
+            <div class="tree-wrapper mt-3" *ngIf="companyViewMode() === 'tree'">
+              <app-company-tree *ngFor="let comp of rootCompanies()" [company]="comp" [selectedCompanyId]="selectedCompany()?.id || 0" (selectCompany)="onSelectCompany($event)" (addChild)="onAddChildSubsidiary($event)" (editCompany)="onEditCompany($event)"></app-company-tree>
+            </div>
+            <!-- Organigramme horizontal -->
+            <div class="org-chart-viewport mt-3" *ngIf="companyViewMode() === 'chart'">
+              <div class="org-chart-tree-container">
+                <app-company-org-chart *ngFor="let comp of rootCompanies()" [company]="comp" [selectedCompanyId]="selectedCompany()?.id || 0" (selectCompany)="onEditCompany($event)"></app-company-org-chart>
+              </div>
+            </div>
           </div>
           
-          <!-- CRUD user form when open -->
-          <div class="user-inline-form mt-3" *ngIf="isEditingUser() || isCreatingUser()">
-            <h4>{{ isCreatingUser() ? t('users_new_title') : t('users_edit_title') }}</h4>
-            <form (submit)="onSaveUser($event)" class="form-grid mt-2">
-              <div class="form-group">
-                <label class="form-label">Username</label>
-                <input type="text" [(ngModel)]="userFormModel.username" name="uName" class="form-input" required />
-              </div>
-              <div class="form-group">
-                <label class="form-label">{{ t('col_email') }}</label>
-                <input type="email" [(ngModel)]="userFormModel.email" name="uEmail" class="form-input" required />
-              </div>
-              <div class="form-group">
+          <!-- Right details form -->
+          <div class="pane-right card-glass" *ngIf="selectedCompany() || isAddingSubsidiary()">
+            <h3>{{ isAddingSubsidiary() ? t('btn_add_child') : t('fields_company_details') }}</h3>
+            <form (submit)="onSaveCompany($event)" class="mt-3">
+              <div class="form-group" *ngIf="isAddingSubsidiary() && parentCompanyForSubsidiary()">
                 <label class="form-label">{{ t('fields_company_parent') }}</label>
-                <select [(ngModel)]="userFormModel.companyId" name="uCompany" class="form-select">
-                  <option *ngFor="let c of adminService.companies()" [value]="c.id">{{ c.name }}</option>
-                </select>
+                <input type="text" [value]="parentCompanyForSubsidiary()!.name" class="form-input" disabled />
               </div>
               <div class="form-group">
-                <label class="form-label">{{ t('col_role') }}</label>
-                <select [(ngModel)]="userFormModel.roleId" name="uRole" class="form-select">
-                  <option *ngFor="let r of adminService.roles()" [value]="r.id">{{ r.name }}</option>
-                </select>
+                <label class="form-label">{{ t('col_name') }}</label>
+                <input type="text" [(ngModel)]="companyFormModel.name" name="companyName" class="form-input" required placeholder="e.g. Tunytech Europe" />
               </div>
-              <div class="form-actions-full">
-                <button type="submit" class="btn btn-primary btn-sm">{{ t('btn_save') }}</button>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="onCancelUserForm()">{{ t('btn_cancel') }}</button>
+              <div class="form-group">
+                <label class="form-label">{{ t('col_siret') }}</label>
+                <input type="text" [(ngModel)]="companyFormModel.vatNumber" name="companyVat" class="form-input" placeholder="e.g. FR8812738" />
+              </div>
+              <div class="form-row">
+                <div class="form-group col">
+                  <label class="form-label">{{ t('col_country') }}</label>
+                  <input type="text" [(ngModel)]="companyFormModel.country" name="companyCountry" class="form-input" placeholder="e.g. France" />
+                </div>
+                <div class="form-group col">
+                  <label class="form-label">{{ t('col_city') }}</label>
+                  <input type="text" [(ngModel)]="companyFormModel.city" name="companyCity" class="form-input" placeholder="e.g. Paris" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('col_address') }}</label>
+                <input type="text" [(ngModel)]="companyFormModel.address" name="companyAddress" class="form-input" placeholder="e.g. 10 Avenue des Champs" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('col_contact') }}</label>
+                <input type="text" [(ngModel)]="companyFormModel.contactInfo" name="companyContact" class="form-input" placeholder="e.g. contact@tunytech.com" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">{{ t('fields_company_logo') }}</label>
+                <div class="logo-upload-preview" *ngIf="companyFormModel.logo">
+                  <img [src]="companyFormModel.logo" alt="Logo de l'entreprise" class="logo-thumbnail" />
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="companyFormModel.logo = ''">{{ t('btn_delete_logo') }}</button>
+                </div>
+                <input type="file" (change)="onLogoFileSelected($event)" accept=".png,.jpg,.jpeg,.svg,.gif,.webp,.bmp,.ico" class="form-input" />
+                <small class="text-muted">{{ t('fields_company_logo_desc') }}</small>
+              </div>
+              <div class="form-actions mt-3">
+                <button type="submit" class="btn btn-primary">{{ t('btn_save') }}</button>
+                <button type="button" class="btn btn-secondary" (click)="onCancelCompanyForm()">{{ t('btn_cancel') }}</button>
+                <button type="button" *ngIf="!isAddingSubsidiary() && selectedCompany()?.id" class="btn btn-danger" (click)="onDeleteCompany()">{{ t('btn_delete') }}</button>
               </div>
             </form>
           </div>
-
-          <div class="table-container mt-3">
-            <table class="premium-table">
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>{{ t('col_email') }}</th>
-                  <th>{{ t('fields_company_parent') }}</th>
-                  <th>{{ t('col_role') }}</th>
-                  <th>{{ t('col_status') }}</th>
-                  <th>{{ t('col_actions') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let u of adminService.users()">
-                  <td><strong>{{ u.username }}</strong></td>
-                  <td>{{ u.email }}</td>
-                  <td><span class="badge badge-primary">{{ u.company?.name || 'N/A' }}</span></td>
-                  <td>{{ u.role?.name || 'N/A' }}</td>
-                  <td>
-                    <span class="badge" [class.badge-success]="u.active" [class.badge-danger]="!u.active">
-                      {{ u.active ? t('status_active') : t('status_inactive') }}
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-secondary btn-sm p-1 mx-1" [title]="t('btn_edit')" (click)="onEditUser(u)">✏️</button>
-                    <button class="btn btn-danger btn-sm p-1 mx-1" [title]="t('btn_delete')" (click)="onDeleteUser(u)">🗑️</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
 
-        <!-- Permissions Dynamic Matrix -->
-        <div class="card-glass mt-4">
-          <h3>{{ t('permissions_matrix_title') }}</h3>
-          <p class="text-muted text-sm mt-1">{{ t('permissions_matrix_desc') }}</p>
-          <app-permission-matrix 
-            [roles]="adminService.roles()" 
-            [permissions]="adminService.permissions()"
-            (updateRole)="onUpdateRolePermissions($event)"
-          ></app-permission-matrix>
-        </div>
-      </div>
-
-      <!-- TAB 3: GLOBAL CONFIGURATION -->
-      <div *ngIf="activeTab() === 'settings'" class="tab-pane-layout-vertical settings-pane-wide">
-        <div class="card-glass">
-          <div class="pane-header flex-column-mobile">
-            <h3>⚙️ {{ t('tab_settings') }}</h3>
-            <!-- Choix du contexte entreprise pour les réglages -->
-            <div class="company-context-selector">
-              <label class="form-label text-sm">Société active :</label>
-              <select [ngModel]="adminService.activeCompanyId()" (ngModelChange)="onSelectSettingsCompany($event)" class="form-select select-sm select-inline">
-                <option *ngFor="let c of adminService.companies()" [value]="c.id">{{ c.name }}</option>
-              </select>
+        <!-- 2. TAB: USERS & ROLES -->
+        <div *ngIf="activeTab() === 'users'" class="tab-pane-layout-vertical animate-fade">
+          <div class="card-glass">
+            <div class="pane-header flex-column-mobile">
+              <h3>Comptes Utilisateurs & Rôles</h3>
+              <button class="btn btn-primary btn-sm" (click)="onOpenUserCreate()">+ Ajouter Utilisateur</button>
             </div>
-          </div>
-
-          <!-- 
-            BARRE DE NAVIGATION DES SOUS-CATÉGORIES :
-            Permet de trier proprement les 100+ paramètres d'administration sans inonder l'écran !
-          -->
-          <div class="settings-sub-navbar">
-            <button 
-              type="button" 
-              class="sub-tab-btn" 
-              [class.active]="activeSettingsSubTab() === 'time'" 
-              (click)="activeSettingsSubTab.set('time')">
-              ⏰ Temps & Télétravail
-            </button>
-            <button 
-              type="button" 
-              class="sub-tab-btn" 
-              [class.active]="activeSettingsSubTab() === 'security'" 
-              (click)="activeSettingsSubTab.set('security')">
-              🔐 Mots de Passe & Sécurité
-            </button>
-            <button 
-              type="button" 
-              class="sub-tab-btn" 
-              [class.active]="activeSettingsSubTab() === 'hr'" 
-              (click)="activeSettingsSubTab.set('hr')">
-              📚 Référentiels RH
-            </button>
-            <button 
-              type="button" 
-              class="sub-tab-btn" 
-              [class.active]="activeSettingsSubTab() === 'alerts'" 
-              (click)="activeSettingsSubTab.set('alerts')">
-              📈 Seuils & Alertes
-            </button>
-          </div>
-          
-          <form (submit)="onSaveSettings($event)" class="mt-4">
             
-            <!-- =========================================================================
-                 SOUS-ONGLET 1 : HEURES DE TRAVAIL & TÉLÉTRAVAIL (TIME)
-                 ========================================================================= -->
-            <div *ngIf="activeSettingsSubTab() === 'time'" class="animate-fade">
-              <h4 class="section-title">🕒 {{ t('settings_work_hours') }}</h4>
-              <div class="form-row mt-2">
-                <div class="form-group col">
-                  <label class="form-label">{{ t('settings_work_start') }}</label>
-                  <input type="text" [(ngModel)]="settingsModel.WORK_START_HOUR" name="workStart" class="form-input" placeholder="e.g. 08:00" />
+            <!-- User Creation/Edit Form -->
+            <div class="user-inline-form mt-3" *ngIf="isEditingUser() || isCreatingUser()">
+              <h4>{{ isCreatingUser() ? 'Nouveau Compte Utilisateur' : 'Modifier le Compte Utilisateur' }}</h4>
+              <form (submit)="onSaveUser($event)" class="form-grid mt-2">
+                <div class="form-group">
+                  <label class="form-label">Identifiant de connexion (Username)</label>
+                  <input type="text" [(ngModel)]="userFormModel.username" name="uName" class="form-input" required />
                 </div>
-                <div class="form-group col">
-                  <label class="form-label">{{ t('settings_work_end') }}</label>
-                  <input type="text" [(ngModel)]="settingsModel.WORK_END_HOUR" name="workEnd" class="form-input" placeholder="e.g. 17:00" />
+                <div class="form-group">
+                  <label class="form-label">E-mail de contact</label>
+                  <input type="email" [(ngModel)]="userFormModel.email" name="uEmail" class="form-input" required />
                 </div>
-                <div class="form-group col">
-                  <label class="form-label">{{ t('settings_max_daily') }}</label>
-                  <input type="number" max="24" [(ngModel)]="settingsModel.MAX_HOURS_DAILY" name="workMaxHours" class="form-input" />
+                <div class="form-group">
+                  <label class="form-label">Société</label>
+                  <select [(ngModel)]="userFormModel.companyId" name="uCompany" class="form-select">
+                    <option *ngFor="let c of adminService.companies()" [value]="c.id">{{ c.name }}</option>
+                  </select>
                 </div>
-              </div>
-
-              <h4 class="section-title mt-4">💻 {{ t('settings_wfh_rules') }}</h4>
-              <div class="form-row mt-2">
-                <div class="form-group col">
-                  <label class="form-label">{{ t('settings_wfh_days_week') }}</label>
-                  <input type="number" max="7" [(ngModel)]="settingsModel.WFH_DAYS_WEEK" name="wfhWeek" class="form-input" />
+                <div class="form-group">
+                  <label class="form-label">Rôle Système</label>
+                  <select [(ngModel)]="userFormModel.roleId" name="uRole" class="form-select">
+                    <option *ngFor="let r of adminService.roles()" [value]="r.id">{{ r.name }}</option>
+                  </select>
                 </div>
-                <div class="form-group col">
-                  <label class="form-label">{{ t('settings_wfh_days_month') }}</label>
-                  <input type="number" max="31" [(ngModel)]="settingsModel.WFH_DAYS_MONTH" name="wfhMonth" class="form-input" />
-                </div>
-              </div>
-
-              <div class="form-group mt-3">
-                <label class="form-label">{{ t('settings_wfh_exceptions') }}</label>
-                <textarea [(ngModel)]="settingsModel.WFH_EXCEPTION_MOTIFS" name="wfhMotifs" class="form-textarea" rows="3" [placeholder]="t('settings_wfh_exceptions_placeholder')"></textarea>
-              </div>
-            </div>
-
-            <!-- =========================================================================
-                 SOUS-ONGLET 2 : MOTEUR DE SÉCURITÉ DES MOTS DE PASSE (SECURITY)
-                 ========================================================================= -->
-            <div *ngIf="activeSettingsSubTab() === 'security'" class="animate-fade">
-              <h4 class="section-title">🛡️ {{ t('settings_security_title') }}</h4>
-              
-              <!-- 
-                1. Taille minimale configurable :
-                Si l'administrateur tente de mettre un chiffre inférieur à 8, 
-                l'application affiche immédiatement un grand panneau de warning d'alerte sécurité jaune !
-              -->
-              <div class="form-group mt-2">
-                <label class="form-label">{{ t('settings_min_len_label') }}</label>
-                <input 
-                  type="number" 
-                  min="4" 
-                  max="30" 
-                  [(ngModel)]="settingsModel.MIN_PASSWORD_LENGTH" 
-                  name="minPasswordLength" 
-                  class="form-input" />
                 
-                @if (settingsModel.MIN_PASSWORD_LENGTH < 8) {
-                  <div class="warning-alert-box mt-2 animate-pop">
-                    {{ t('settings_min_len_warning') }}
-                  </div>
-                }
-              </div>
+                <div class="form-group">
+                  <label class="form-label">Associer une fiche Collaborateur (Facultatif)</label>
+                  <select [(ngModel)]="userFormModel.employeeId" name="uEmployeeId" class="form-select">
+                    <option [value]="null">-- Aucun collaborateur lié (Compte Indépendant) --</option>
+                    <option *ngFor="let emp of adminService.employees()" [value]="emp.id">
+                      {{ emp.firstName }} {{ emp.lastName }} ({{ emp.jobTitle || 'Sans poste' }})
+                    </option>
+                  </select>
+                </div>
 
-              <!-- 2. Durée de validité avant expiration -->
-              <div class="form-group mt-3">
-                <label class="form-label">{{ t('settings_expiry_label') }}</label>
-                <input 
-                  type="number" 
-                  min="30" 
-                  max="365" 
-                  [(ngModel)]="settingsModel.PASSWORD_EXPIRY_DAYS" 
-                  name="passwordExpiryDays" 
-                  class="form-input" />
-                <small class="text-muted">{{ t('settings_expiry_desc') }}</small>
-              </div>
+                <!-- Fallback FirstName & LastName if no employee is linked (needed for password criteria name checks) -->
+                <div class="form-group" *ngIf="!userFormModel.employeeId">
+                  <label class="form-label">Prénom (Utile pour la sécurité)</label>
+                  <input type="text" [(ngModel)]="userFormModel.firstName" name="uFirstName" class="form-input" placeholder="e.g. Jean" />
+                </div>
+                <div class="form-group" *ngIf="!userFormModel.employeeId">
+                  <label class="form-label">Nom (Utile pour la sécurité)</label>
+                  <input type="text" [(ngModel)]="userFormModel.lastName" name="uLastName" class="form-input" placeholder="e.g. DUPONT" />
+                </div>
 
-              <!-- 3. Validité du Token temporaire de réinitialisation -->
-              <div class="form-group mt-3">
-                <label class="form-label">{{ t('settings_token_validity_label') }}</label>
-                <input 
-                  type="number" 
-                  min="5" 
-                  max="60" 
-                  [(ngModel)]="settingsModel.TOKEN_VALIDITY_MINUTES" 
-                  name="tokenValidityMinutes" 
-                  class="form-input" />
-                <small class="text-muted">{{ t('settings_token_validity_desc') }}</small>
-              </div>
+                <div class="form-actions-full">
+                  <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="onCancelUserForm()">Annuler</button>
+                </div>
+              </form>
             </div>
 
-            <!-- =========================================================================
-                 SOUS-ONGLET 3 : RÉFÉRENTIELS ET DICTIONNAIRES RH (HR)
-                 ========================================================================= -->
-            <div *ngIf="activeSettingsSubTab() === 'hr'" class="animate-fade">
-              <h4 class="section-title">📚 {{ t('settings_hr_title') }}</h4>
+            <!-- Users list grid -->
+            <div class="mt-3">
+              <p-table [value]="adminService.users()" [paginator]="true" [rows]="10" styleClass="p-datatable-striped" [tableStyle]="{'min-width': '50rem'}">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="username">Identifiant <p-sortIcon field="username"></p-sortIcon></th>
+                    <th pSortableColumn="email">E-mail <p-sortIcon field="email"></p-sortIcon></th>
+                    <th pSortableColumn="company.name">Société <p-sortIcon field="company.name"></p-sortIcon></th>
+                    <th pSortableColumn="role.name">Rôle Système <p-sortIcon field="role.name"></p-sortIcon></th>
+                    <th>Fiche RH Associée</th>
+                    <th>Statut Accès</th>
+                    <th>Actions administratives</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-u>
+                  <tr>
+                    <td><strong>{{ u.username }}</strong></td>
+                    <td>{{ u.email }}</td>
+                    <td><span class="badge badge-primary">{{ u.company?.name || 'N/A' }}</span></td>
+                    <td>{{ u.role?.name || 'N/A' }}</td>
+                    <td>
+                      <span *ngIf="u.employee" class="badge badge-success">👔 {{ u.employee.firstName }} {{ u.employee.lastName }}</span>
+                      <span *ngIf="!u.employee" class="text-muted text-xs">Aucun lien</span>
+                    </td>
+                    <td>
+                      @if (u.accountDisabled) {
+                        <span class="badge badge-danger">Compte Désactivé</span>
+                      } @else if (u.lockedUntil) {
+                        <span class="badge badge-warning" title="Bloqué temporairement">Bloqué (Échecs)</span>
+                      } @else if (u.active) {
+                        <span class="badge badge-success">Actif</span>
+                      } @else {
+                        <span class="badge badge-danger">Inactif</span>
+                      }
+                    </td>
+                    <td>
+                      <button class="btn btn-secondary btn-sm p-1 mx-1" title="Modifier" (click)="onEditUser(u)">✏️</button>
+                      <button *ngIf="u.lockedUntil || u.accountDisabled" class="btn btn-success btn-sm p-1 mx-1" title="Déverrouiller et Activer" (click)="onUnlockUser(u)">🔓 Déverrouiller</button>
+                      <button *ngIf="u.active" class="btn btn-danger btn-sm p-1 mx-1" title="Désactiver le compte" (click)="onDeleteUser(u)">❌ Désactiver</button>
+                      <button *ngIf="!u.active" class="btn btn-success btn-sm p-1 mx-1" title="Activer le compte" (click)="onUnlockUser(u)">✔️ Activer</button>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="7" class="text-muted text-center py-4">Aucun compte utilisateur trouvé.</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+ 
+          <!-- Dynamic Permissions Matrix -->
+          <div class="card-glass">
+            <h3>Matrice de Droits & Permissions</h3>
+            <p class="text-muted text-sm mt-1">Configurez les droits d'accès associés aux rôles système de la plateforme.</p>
+            <app-permission-matrix [roles]="adminService.roles()" [permissions]="adminService.permissions()" (updateRole)="onUpdateRolePermissions($event)"></app-permission-matrix>
+          </div>
+        </div>
 
-              <app-hr-referentials
-                [companyId]="adminService.activeCompanyId()"
-                [onToast]="triggerToastFromRef.bind(this)">
-              </app-hr-referentials>
-
-              <hr class="settings-divider mt-4 mb-3" />
-
-              <h4 class="section-title">{{ t('settings_other_referentials') }}</h4>
-
-              <!-- Liste des formations -->
-              <div class="form-group mt-3">
-                <label class="form-label">{{ t('settings_trainings_label') }}</label>
-                <textarea 
-                  [(ngModel)]="settingsModel.TRAINING_THEMES" 
-                  name="trainingThemes" 
-                  class="form-textarea" 
-                  rows="3" 
-                  placeholder="Cybersécurité, Audit Qualité, etc..."></textarea>
+        <!-- 2.1 TAB: EMPLOYEES (MAIN MENU FIRST LEVEL REGISTER) -->
+        <div *ngIf="activeTab() === 'employees'" class="tab-pane-layout-vertical animate-fade">
+          
+          <!-- Premium Metrics & Insights Dashboard Widgets -->
+          <div class="metrics-premium-row mb-4">
+            <!-- Metric 1: Average Age -->
+            <div class="metric-widget card-glass shadow-hover">
+              <div class="widget-header">
+                <span class="widget-icon">🎂</span>
+                <h4>Moyenne d'Âge</h4>
               </div>
-
-              <!-- Liste des habilitations/certifications -->
-              <div class="form-group mt-3">
-                <label class="form-label">{{ t('settings_habilitations_label') }}</label>
-                <textarea 
-                  [(ngModel)]="settingsModel.HABILITATION_LIST" 
-                  name="habilitationList" 
-                  class="form-textarea" 
-                  rows="3" 
-                  placeholder="Habilitation Électrique, ISO 9001 Lead Auditor, etc..."></textarea>
+              <div class="widget-value mt-2">
+                <span class="large-number text-primary">{{ averageAge() }} ans</span>
               </div>
+              <p class="text-xs text-muted mt-2">Moyenne d'âge dynamique calculée en direct pour la société active.</p>
             </div>
 
-            <!-- =========================================================================
-                 SOUS-ONGLET 4 : ALERTES & NOTIFICATIONS SYSTÈME (ALERTS)
-                 ========================================================================= -->
-            <div *ngIf="activeSettingsSubTab() === 'alerts'" class="animate-fade">
-              <h4 class="section-title">{{ t('settings_thresholds_title') }}</h4>
+            <!-- Metric 2: Upcoming Retirement departures -->
+            <div class="metric-widget card-glass shadow-hover widget-wide">
+              <div class="widget-header">
+                <span class="widget-icon">👴</span>
+                <h4>Prochains Départs en Retraite</h4>
+              </div>
+              <div class="widget-departures-list mt-2">
+                <div *ngFor="let dep of upcomingDepartures()" class="departure-item">
+                  <span class="dep-name font-semibold text-sm">{{ dep.name }}</span>
+                  <span class="dep-date text-xs text-muted">{{ formatExpiryDate(dep.retirementDate) }}</span>
+                  <span class="badge badge-warning text-xs font-semibold">{{ dep.yearsRemaining }} ans restants</span>
+                </div>
+                <div *ngIf="upcomingDepartures().length === 0" class="text-muted text-xs py-2">
+                  Aucun départ en retraite proche renseigné.
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <!-- Seuil critique de Turn-over -->
-              <div class="form-group mt-2">
-                <label class="form-label">{{ t('settings_turnover_label') }}</label>
-                <input 
-                  type="number" 
-                  min="1" 
-                  max="50" 
-                  [(ngModel)]="settingsModel.TURNOVER_CRITICAL_THRESHOLD" 
-                  name="turnoverCritical" 
-                  class="form-input" />
-                <small class="text-muted">{{ t('settings_turnover_desc') }}</small>
+          <div class="card-glass">
+            <div class="pane-header flex-column-mobile">
+              <div>
+                <h3>Registre National des Collaborateurs (Fiches RH)</h3>
+                <p class="text-sm text-muted">Consultez l'organigramme, l'historique d'affectation de postes et mettez à jour les coordonnées professionnelles.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" (click)="onOpenEmployeeCreate()">+ Ajouter un Collaborateur</button>
+            </div>
+
+            <!-- Filiale & Recherche Filters -->
+            <div class="registry-filters-row mt-3 mb-3 card-glass-inner">
+              <div class="filter-group">
+                <span class="filter-icon">🏢</span>
+                <label class="filter-label">Filtrer par filiale :</label>
+                <select [ngModel]="selectedBranchFilterId()" (ngModelChange)="selectedBranchFilterId.set($event)" class="form-select select-sm select-inline">
+                  <option [ngValue]="null">Toutes les filiales</option>
+                  <option *ngFor="let c of adminService.companies()" [ngValue]="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <span class="filter-icon">🔍</span>
+                <label class="filter-label">Rechercher :</label>
+                <input type="text" [ngModel]="employeeSearchQuery()" (ngModelChange)="employeeSearchQuery.set($event)" placeholder="Rechercher par nom, email, poste..." class="form-input search-box select-inline" />
               </div>
             </div>
             
-            <div class="form-actions mt-4 border-t pt-3">
-              <button type="submit" class="btn btn-primary">💾 {{ t('btn_save') }}</button>
-            </div>
-          </form>
-        </div>
-      </div>
+            <!-- Employee Creation/Edit Floating Dialog -->
+            <p-dialog [header]="isCreatingEmployee() ? '👤 Créer une nouvelle fiche collaborateur' : '👤 Modifier la fiche de ' + employeeFormModel.firstName + ' ' + employeeFormModel.lastName" [visible]="isEditingEmployee() || isCreatingEmployee()" (onHide)="onCancelEmployeeForm()" [modal]="true" [draggable]="false" [resizable]="false" styleClass="modal-card dialog-wide">
+              <form (submit)="onSaveEmployee($event)" class="form-grid-premium">
+                
+                <!-- Section 1: Informations Personnelles -->
+                <div class="form-section-title">📝 Informations d'État Civil & Contact</div>
+                <div class="form-row">
+                  <div class="form-group col">
+                    <label class="form-label">Nom de famille</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.lastName" name="eLastName" class="form-input" required placeholder="DUPONT" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Prénom</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.firstName" name="eFirstName" class="form-input" required placeholder="Jean" />
+                  </div>
+                </div>
 
-      <!-- TAB 4: PRIORITY MODULES & DASHBOARD -->
-      <div *ngIf="activeTab() === 'priority'" class="tab-pane-layout-vertical">
-        <!-- 4 Grid dashboard display cards for priority modules -->
-        <div class="modules-dashboard-grid">
-          
-          <!-- Module 1: Employees -->
-          <div class="card-glass shadow-hover">
-            <div class="dashboard-card-header">
-              <span class="card-icon">👥</span>
-              <h4>{{ t('module_employees') }}</h4>
-            </div>
-            <div class="card-stats mt-2">
-              <div class="stat-item">
-                <span class="stat-number">124</span>
-                <span class="stat-label">{{ t('stat_employees') }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">5</span>
-                <span class="stat-label">{{ t('stat_onboarding') }}</span>
-              </div>
-            </div>
-            <p class="text-sm mt-3 text-muted">{{ t('desc_employees') }}</p>
-          </div>
+                <div class="form-row mt-3">
+                  <div class="form-group col">
+                    <label class="form-label">Adresse E-mail Professionnelle</label>
+                    <input type="email" pInputText [(ngModel)]="employeeFormModel.email" name="eEmail" class="form-input" required placeholder="contact.pro@tunytech.com" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Téléphone Professionnel (Bureau/Mobile)</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.phoneNumber" name="ePhone" class="form-input" placeholder="+33 6 12 34 56 78" />
+                  </div>
+                </div>
 
-          <!-- Module 2: Skills -->
-          <div class="card-glass shadow-hover">
-            <div class="dashboard-card-header">
-              <span class="card-icon">🎯</span>
-              <h4>{{ t('module_skills') }}</h4>
-            </div>
-            <div class="card-stats mt-2">
-              <div class="stat-item">
-                <span class="stat-number">48</span>
-                <span class="stat-label">{{ t('stat_skills') }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">84%</span>
-                <span class="stat-label">{{ t('stat_polyvalence') }}</span>
-              </div>
-            </div>
-            <p class="text-sm mt-3 text-muted">{{ t('desc_skills') }}</p>
-          </div>
+                <div class="form-row mt-3">
+                  <div class="form-group col">
+                    <label class="form-label">Date de Naissance</label>
+                    <p-datepicker [(ngModel)]="employeeFormModel.birthDate" name="eBirthDate" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full"></p-datepicker>
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Sexe / Genre</label>
+                    <p-dropdown [options]="genderDropdownOptions()" [(ngModel)]="employeeFormModel.gender" name="eGender" styleClass="w-full"></p-dropdown>
+                  </div>
+                </div>
 
-          <!-- Module 3: Habilitations -->
-          <div class="card-glass shadow-hover border-warning">
-            <div class="dashboard-card-header">
-              <span class="card-icon">📜</span>
-              <h4>{{ t('module_habilitations') }}</h4>
-            </div>
-            <div class="card-stats mt-2">
-              <div class="stat-item">
-                <span class="stat-number text-warning">4</span>
-                <span class="stat-label">{{ t('stat_expirations') }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">18</span>
-                <span class="stat-label">{{ t('stat_certified') }}</span>
-              </div>
-            </div>
-            <p class="text-sm mt-3 text-muted">{{ t('desc_habilitations') }}</p>
-          </div>
+                <!-- Section 2: Rattachement & Hiérarchie Managériale -->
+                <div class="form-section-title mt-4">👔 Affectation Administrative & Hiérarchie</div>
+                <div class="form-row">
+                  <div class="form-group col">
+                    <label class="form-label">Société / Filiale active</label>
+                    <p-dropdown [options]="companyDropdownOptions()" [(ngModel)]="employeeFormModel.companyId" name="eCompany" styleClass="w-full"></p-dropdown>
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Département / Service</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.department" name="eDepartment" class="form-input" placeholder="e.g. Ressources Humaines" />
+                  </div>
+                </div>
 
-          <!-- Module 4: Formations -->
-          <div class="card-glass shadow-hover">
-            <div class="dashboard-card-header">
-              <span class="card-icon">🎓</span>
-              <h4>{{ t('module_trainings') }}</h4>
-            </div>
-            <div class="card-stats mt-2">
-              <div class="stat-item">
-                <span class="stat-number">€12.5k</span>
-                <span class="stat-label">{{ t('stat_budget') }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-number">92%</span>
-                <span class="stat-label">{{ t('stat_satisfaction') }}</span>
-              </div>
-            </div>
-            <p class="text-sm mt-3 text-muted">{{ t('desc_trainings') }}</p>
-          </div>
+                <div class="form-row mt-3">
+                  <div class="form-group col">
+                    <label class="form-label">Responsable Hiérarchique N+1</label>
+                    <p-dropdown [options]="managerDropdownOptions()" [(ngModel)]="employeeFormModel.managerId" name="eManager" [showClear]="true" placeholder="Aucun (Niveau de direction)" styleClass="w-full"></p-dropdown>
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Poste Actuel de Référence</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.jobTitle" name="eJobTitle" class="form-input" placeholder="e.g. Coordinateur Qualité" />
+                  </div>
+                </div>
 
-        </div>
+                <!-- Section 3: Historique & Pluralité des Postes (Multi-Postes) -->
+                <div class="form-section-title mt-4">💼 Historique des Postes & Multi-Postes (Zéro Hardcoding)</div>
+                <div class="post-assignments-timeline card-glass p-3 mb-3">
+                  <p class="text-xs text-muted mb-2">Un collaborateur peut occuper plusieurs postes simultanément (actifs) ou garder un historique de carrière.</p>
+                  
+                  <div class="table-container text-xs">
+                    <table class="premium-table-inner">
+                      <thead>
+                        <tr>
+                          <th>Poste / Profil Métier (Admin Settings)</th>
+                          <th>Date de Début</th>
+                          <th>Date de Fin</th>
+                          <th>Poste Actif ?</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let assign of employeeFormModel.postAssignments; let idx = index">
+                          <td>
+                            <p-dropdown [options]="jobProfileDropdownOptions()" [(ngModel)]="assign.jobProfile.id" [name]="'assignJp_' + idx" styleClass="w-full p-dropdown-xs"></p-dropdown>
+                          </td>
+                          <td>
+                            <p-datepicker [(ngModel)]="assign.startDate" [name]="'assignStart_' + idx" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full p-calendar-xs"></p-datepicker>
+                          </td>
+                          <td>
+                            <p-datepicker [(ngModel)]="assign.endDate" [name]="'assignEnd_' + idx" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full p-calendar-xs"></p-datepicker>
+                          </td>
+                          <td>
+                            <input type="checkbox" [(ngModel)]="assign.active" [name]="'assignActive_' + idx" class="checkbox-sm" />
+                          </td>
+                          <td>
+                            <button type="button" class="btn btn-danger btn-xs p-1" (click)="removePostAssignment(idx)" title="Supprimer de la carrière">🗑️</button>
+                          </td>
+                        </tr>
+                        <tr *ngIf="employeeFormModel.postAssignments.length === 0">
+                          <td colspan="5" class="text-center text-muted py-2">Aucun historique d'affectations configuré.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
 
-        <!-- Detailed display tables for listings with Search & Pagination & simulated CSV export -->
-        <div class="card-glass mt-4">
-          <div class="pane-header">
-            <div class="pane-header-left">
-              <h3>{{ t('employees_list_title') }}</h3>
-              <p class="text-muted text-sm mt-1">{{ t('employees_list_subtitle') }}</p>
-            </div>
-            <div class="pane-header-right">
-              <!-- Search box -->
-              <input 
-                type="text" 
-                [(ngModel)]="searchQuery" 
-                (ngModelChange)="onSearch()"
-                [placeholder]="t('search_placeholder')" 
-                class="form-input search-box select-inline" 
-              />
-              
-              <!-- Simulated Export button with downloading animation support -->
-              <button class="btn btn-secondary btn-sm" (click)="onExportReport()" [disabled]="isExporting()">
-                <span *ngIf="isExporting()">⏳ {{ t('btn_export') }}...</span>
-                <span *ngIf="!isExporting()">📥 {{ t('btn_export') }}</span>
-              </button>
-            </div>
-          </div>
+                  <button type="button" class="btn btn-secondary btn-xs mt-2" (click)="addPostAssignment()">
+                    ➕ Affecter à un nouveau poste
+                  </button>
+                </div>
 
-          <!-- Employees registry listing -->
-          <div class="table-container mt-3">
-            <table class="premium-table">
-              <thead>
-                <tr>
-                  <th>{{ t('col_employee_name') }}</th>
-                  <th>{{ t('fields_company_parent') }}</th>
-                  <th>{{ t('col_job_title') }}</th>
-                  <th>{{ t('col_key_skill') }}</th>
-                  <th>{{ t('col_role') }}</th>
-                  <th>{{ t('col_hab_exp') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let emp of filteredEmployees()">
-                  <td>
-                    <div class="employee-cell">
-                      <span class="emp-avatar">👤</span>
-                      <div>
-                        <strong>{{ emp.name }}</strong>
-                        <span class="text-muted text-xs block">{{ emp.email }}</span>
+                <!-- Section 4: Dates Magiques & Compétences Clés -->
+                <div class="form-section-title mt-4">📅 Cycle de Vie & Qualifications</div>
+                <div class="form-row">
+                  <div class="form-group col">
+                    <label class="form-label">Date d'Entrée à la Société</label>
+                    <p-datepicker [(ngModel)]="employeeFormModel.entryDate" name="eEntryDate" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full"></p-datepicker>
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Date Prévisionnelle de Retraite</label>
+                    <p-datepicker [(ngModel)]="employeeFormModel.retirementDate" name="eRetirementDate" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full"></p-datepicker>
+                  </div>
+                </div>
+
+                <div class="form-row mt-3">
+                  <div class="form-group col">
+                    <label class="form-label">Désignation de l'Habilitation Critique</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.habilitationName" name="eHabilitation" class="form-input" placeholder="e.g. Habilitation Électrique B2V" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Échéance de l'Habilitation</label>
+                    <p-datepicker [(ngModel)]="employeeFormModel.habilitationExpiryDate" name="eHabilitationExp" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full"></p-datepicker>
+                  </div>
+                </div>
+
+                <div class="form-row mt-3">
+                  <div class="form-group col">
+                    <label class="form-label">Compétence Principale Référencée</label>
+                    <input type="text" pInputText [(ngModel)]="employeeFormModel.keySkill" name="eKeySkill" class="form-input" placeholder="e.g. Java & Angular Architecture" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Niveau de Compétence Référencé</label>
+                    <p-dropdown [options]="skillLevels" [(ngModel)]="employeeFormModel.skillLevel" name="eSkillLevel" styleClass="w-full"></p-dropdown>
+                  </div>
+                </div>
+
+                <div class="form-actions-full border-t pt-3 mt-4">
+                  <button type="submit" class="btn btn-primary btn-sm">💾 Enregistrer la Fiche Collaborateur</button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="onCancelEmployeeForm()">❌ Annuler</button>
+                </div>
+              </form>
+            </p-dialog>
+
+            <!-- Employees list grid using PrimeNG p-table -->
+            <div class="mt-3">
+              <p-table [value]="filteredRegistryEmployees()" [paginator]="true" [rows]="5" styleClass="p-datatable-striped" [tableStyle]="{'min-width': '60rem'}">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="lastName">Collaborateur <p-sortIcon field="lastName"></p-sortIcon></th>
+                    <th>Téléphone / Département</th>
+                    <th>Société</th>
+                    <th>Postes & Carrière</th>
+                    <th>Manager N+1</th>
+                    <th>Dates Clés</th>
+                    <th>Statut RH</th>
+                    <th>Actions</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-e>
+                  <tr>
+                    <td>
+                      <div class="employee-cell">
+                        <span class="emp-avatar">👤</span>
+                        <div>
+                          <strong>{{ e.firstName }} {{ e.lastName }}</strong>
+                          <span class="text-muted text-xs block">{{ e.email }}</span>
+                          <span class="badge badge-info text-xxs block mt-1" *ngIf="e.gender || e.birthDate">
+                            {{ e.gender || 'Non défini' }} {{ e.birthDate ? ' | Anniv : ' + formatExpiryDate(e.birthDate) : '' }}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td><span class="badge badge-primary">{{ emp.company }}</span></td>
-                  <td>{{ emp.role }}</td>
-                  <td>
-                    <div class="skill-indicator-wrapper">
-                      <span>{{ emp.skill }}</span>
-                      <span class="skill-stars">{{ '★'.repeat(emp.skillLevel) }}{{ '☆'.repeat(5 - emp.skillLevel) }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="badge" [class.badge-success]="emp.habStatus === 'ok'" [class.badge-warning]="emp.habStatus === 'warning'">
-                      {{ emp.habilitation }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="text-sm font-semibold" [class.text-warning]="emp.habStatus === 'warning'">
-                      {{ emp.habExp }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    </td>
+                    <td>
+                      <div class="text-sm font-semibold">{{ e.phoneNumber || 'Aucun numéro' }}</div>
+                      <span class="text-xs text-muted block">{{ e.department || 'Sans département' }}</span>
+                    </td>
+                    <td><span class="badge badge-primary">{{ e.company?.name || 'N/A' }}</span></td>
+                    <td>
+                      <div class="career-badges-wrapper">
+                        <span *ngFor="let assign of e.postAssignments" class="badge" [class.badge-success]="assign.active" [class.badge-secondary]="!assign.active" [title]="'Du ' + formatExpiryDate(assign.startDate) + (assign.endDate ? ' au ' + formatExpiryDate(assign.endDate) : '')">
+                          {{ assign.jobProfile.name }}
+                        </span>
+                        <span *ngIf="!e.postAssignments || e.postAssignments.length === 0" class="text-muted text-xs">
+                          {{ e.jobTitle || 'Aucun poste actif' }}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span *ngIf="e.manager" class="badge badge-outline-primary" title="Manager Direct N+1">
+                        👔 {{ e.manager.firstName }} {{ e.manager.lastName }}
+                      </span>
+                      <span *ngIf="!e.manager" class="text-muted text-xs">Aucun manager direct</span>
+                    </td>
+                    <td>
+                      <div class="text-xxs"><strong>Entrée :</strong> {{ e.entryDate ? formatExpiryDate(e.entryDate) : 'Inconnue' }}</div>
+                      <div class="text-xxs"><strong>Retraite :</strong> {{ e.retirementDate ? formatExpiryDate(e.retirementDate) : 'Non définie' }}</div>
+                    </td>
+                    <td>
+                      <span class="badge" [class.badge-success]="e.active" [class.badge-danger]="!e.active">
+                        {{ e.active ? 'Actif' : 'Désactivé' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn btn-secondary btn-sm p-1 mx-1" title="Modifier la Fiche Collaborateur" (click)="onEditEmployee(e)">✏️</button>
+                      <button *ngIf="e.active" class="btn btn-danger btn-sm p-1 mx-1" title="Désactiver le collaborateur (Soft-Delete)" (click)="onDeleteEmployee(e)">❌ Désactiver</button>
+                      <button *ngIf="!e.active" class="btn btn-success btn-sm p-1 mx-1" title="Réactiver le collaborateur" (click)="e.active = true; adminService.saveEmployee(e)">✔️ Activer</button>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="8" class="text-muted text-center py-4">Aucun collaborateur ne correspond à vos critères de recherche.</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. TAB: JOB PROFILES & FUNCTIONS -->
+        <div *ngIf="activeTab() === 'job-profiles'" class="tab-pane-layout-vertical animate-fade">
+          <div class="card-glass">
+            <h3>💼 Profils Métiers & Fonctions Collaborateurs</h3>
+            <p class="text-muted text-sm">Créez et gérez les fiches de postes et rôles collaborateurs de votre organisation.</p>
+            
+            <app-hr-referentials
+              [companyId]="adminService.activeCompanyId()"
+              [initialPanel]="'jobProfiles'"
+              [onToast]="triggerToastFromRef.bind(this)">
+            </app-hr-referentials>
+          </div>
+        </div>
+
+        <!-- 4. TAB: SKILLS MAPPING -->
+        <div *ngIf="activeTab() === 'skills-mapping'" class="tab-pane-layout-vertical animate-fade">
+          <div class="card-glass">
+            <h3>🎯 Compétences & Cartographies de Compétences</h3>
+            <p class="text-muted text-sm">Administrez le dictionnaire des compétences et reliez-les aux profils métiers de l'entreprise.</p>
+            
+            <app-hr-referentials
+              [companyId]="adminService.activeCompanyId()"
+              [initialPanel]="'skills'"
+              [onToast]="triggerToastFromRef.bind(this)">
+            </app-hr-referentials>
+          </div>
+        </div>
+
+        <!-- 5. TAB: SECURITY & GLOBAL SETTINGS -->
+        <div *ngIf="activeTab() === 'security'" class="tab-pane-layout-vertical settings-pane-wide animate-fade">
+          <div class="card-glass">
+            <div class="pane-header flex-column-mobile">
+              <h3>🛡️ Sécurité de Connexions & Paramètres Globaux</h3>
+              <div class="company-context-selector">
+                <label class="form-label text-sm">Société active :</label>
+                <select [ngModel]="adminService.activeCompanyId()" (ngModelChange)="onSelectSettingsCompany($event)" class="form-select select-sm select-inline">
+                  <option *ngFor="let c of adminService.companies()" [value]="c.id">{{ c.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Categories of configs (sub tabs) -->
+            <div class="settings-sub-navbar">
+              <button type="button" class="sub-tab-btn" [class.active]="activeSettingsSubTab() === 'time'" (click)="activeSettingsSubTab.set('time')">⏰ Temps & Télétravail</button>
+              <button type="button" class="sub-tab-btn" [class.active]="activeSettingsSubTab() === 'security'" (click)="activeSettingsSubTab.set('security')">🔐 Mots de Passe & Sécurité</button>
+              <button type="button" class="sub-tab-btn" [class.active]="activeSettingsSubTab() === 'alerts'" (click)="activeSettingsSubTab.set('alerts')">📈 Seuils & Alertes</button>
+            </div>
+
+            <form (submit)="onSaveSettings($event)" class="mt-4">
+              <!-- SUBTAB: TIME -->
+              <div *ngIf="activeSettingsSubTab() === 'time'" class="animate-fade">
+                <h4 class="section-title">🕒 Horaires & Temps de travail journalier</h4>
+                <div class="form-row mt-2">
+                  <div class="form-group col">
+                    <label class="form-label">Heure Début</label>
+                    <input type="text" [(ngModel)]="settingsModel.WORK_START_HOUR" name="workStart" class="form-input" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Heure Fin</label>
+                    <input type="text" [(ngModel)]="settingsModel.WORK_END_HOUR" name="workEnd" class="form-input" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Nombre Heures Max / Jour</label>
+                    <input type="number" max="24" [(ngModel)]="settingsModel.MAX_HOURS_DAILY" name="workMaxHours" class="form-input" />
+                  </div>
+                </div>
+
+                <h4 class="section-title mt-4">💻 Télétravail & Exceptions</h4>
+                <div class="form-row mt-2">
+                  <div class="form-group col">
+                    <label class="form-label">Jours / Semaine</label>
+                    <input type="number" max="7" [(ngModel)]="settingsModel.WFH_DAYS_WEEK" name="wfhWeek" class="form-input" />
+                  </div>
+                  <div class="form-group col">
+                    <label class="form-label">Jours / Mois</label>
+                    <input type="number" max="31" [(ngModel)]="settingsModel.WFH_DAYS_MONTH" name="wfhMonth" class="form-input" />
+                  </div>
+                </div>
+                <div class="form-group mt-3">
+                  <label class="form-label">Motifs Exceptionnels de Télétravail</label>
+                  <textarea [(ngModel)]="settingsModel.WFH_EXCEPTION_MOTIFS" name="wfhMotifs" class="form-textarea" rows="3"></textarea>
+                </div>
+              </div>
+
+              <!-- SUBTAB: SECURITY -->
+              <div *ngIf="activeSettingsSubTab() === 'security'" class="animate-fade">
+                <h4 class="section-title">🔐 Mots de Passe & Politique d'Accès</h4>
+                
+                <div class="form-group mt-2">
+                  <label class="form-label">Longueur Minimale du Mot de Passe</label>
+                  <input type="number" min="4" max="30" [(ngModel)]="settingsModel.MIN_PASSWORD_LENGTH" name="minPasswordLength" class="form-input" />
+                  <div class="warning-alert-box mt-2 animate-pop" *ngIf="settingsModel.MIN_PASSWORD_LENGTH < 8">
+                    ⚠️ Attention : Une longueur inférieure à 8 n'est pas recommandée pour la sécurité !
+                  </div>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label">Validité en Jours du Mot de Passe (Expiration)</label>
+                  <input type="number" min="30" max="365" [(ngModel)]="settingsModel.PASSWORD_EXPIRY_DAYS" name="passwordExpiryDays" class="form-input" />
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label">Durée de Validité du Token de Récupération (Minutes)</label>
+                  <input type="number" min="5" max="60" [(ngModel)]="settingsModel.TOKEN_VALIDITY_MINUTES" name="tokenValidityMinutes" class="form-input" />
+                </div>
+              </div>
+
+              <!-- SUBTAB: THRESHOLDS -->
+              <div *ngIf="activeSettingsSubTab() === 'alerts'" class="animate-fade">
+                <h4 class="section-title">📈 Seuils de Turn-over & Habilitations</h4>
+                <div class="form-group mt-2">
+                  <label class="form-label">Seuil de Turn-over Critique (%)</label>
+                   <input type="number" min="1" max="50" [(ngModel)]="settingsModel.TURNOVER_CRITICAL_THRESHOLD" name="turnoverCritical" class="form-input" />
+                  <small class="text-muted">Déclenche des alertes si le taux dépasse ce seuil.</small>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="form-label">Liste des genres autorisés (séparés par des virgules)</label>
+                  <input type="text" [(ngModel)]="settingsModel.GENDER_LIST" name="genderList" class="form-input" />
+                  <small class="text-muted">Permet de paramétrer les choix de sexe/genre pour les fiches collaborateurs sans hardcoding.</small>
+                </div>
+              </div>
+
+              <div class="form-actions mt-4 border-t pt-3">
+                <button type="submit" class="btn btn-primary">💾 Sauvegarder les Paramètres</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 6. TAB: EMAIL ALERTS -->
+        <div *ngIf="activeTab() === 'email-alerts'" class="tab-pane-layout-vertical animate-fade">
+          <div class="card-glass">
+            <h3>✉️ Configuration des Alertes E-mails Automatiques</h3>
+            <p class="text-muted text-sm">Configurez les envois automatiques de courriels pour informer ou alerter les équipes.</p>
+            
+            <div class="table-container mt-3">
+              <table class="premium-table">
+                <thead>
+                  <tr>
+                    <th>Type d'Alerte</th>
+                    <th>Destinataire Cible</th>
+                    <th>Statut d'Envoi</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let alert of emailAlerts()">
+                    <td><strong>{{ alert.name }}</strong></td>
+                    <td><span class="badge badge-primary">{{ alert.recipientRole || 'Tous' }}</span></td>
+                    <td>
+                      <span class="badge" [class.badge-success]="alert.active" [class.badge-danger]="!alert.active">
+                        {{ alert.active ? 'Actif' : 'Désactivé' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button class="btn btn-secondary btn-sm" (click)="onToggleEmailAlert(alert)">
+                        {{ alert.active ? '🚫 Désactiver' : '✔️ Activer' }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. TAB: CONNECTION NOTIFICATIONS -->
+        <div *ngIf="activeTab() === 'connection-notifications'" class="tab-pane-layout-vertical animate-fade">
+          <div class="card-glass">
+            <h3>🔔 Alertes & Notifications de Connexion</h3>
+            <p class="text-muted text-sm">Alertes de connexion persistantes tant que l'action ou l'acquittement n'a pas été réalisé.</p>
+            
+            <div class="table-container mt-3">
+              <table class="premium-table">
+                <thead>
+                  <tr>
+                    <th>Utilisateur concerné</th>
+                    <th>Message de Notification</th>
+                    <th>Recommencer à la connexion</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let notif of notificationsList()">
+                    <td><strong>{{ notif.user?.username || 'Tous' }}</strong></td>
+                    <td>{{ notif.content }}</td>
+                    <td>
+                      <span class="badge" [class.badge-primary]="notif.repeated" [class.badge-secondary]="!notif.repeated">
+                        {{ notif.repeated ? 'Oui' : 'Non' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [class.badge-success]="notif.acknowledged" [class.badge-danger]="!notif.acknowledged">
+                        {{ notif.acknowledged ? 'Acquittée' : 'Active' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button *ngIf="!notif.acknowledged" class="btn btn-primary btn-sm" (click)="onAcknowledgeNotification(notif)">
+                        ✔️ Acquitter
+                      </button>
+                      <span *ngIf="notif.acknowledged" class="text-muted text-xs">Acquittée</span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="notificationsList().length === 0">
+                    <td colspan="5" class="text-center text-muted py-4">Aucune notification active pour le moment.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. TAB: PRIORITY MODULES & DASHBOARD -->
+        <div *ngIf="activeTab() === 'priority-dashboard'" class="tab-pane-layout-vertical animate-fade">
+          <!-- stats widgets -->
+          <div class="modules-dashboard-grid">
+            <!-- stats Employee -->
+            <div class="card-glass shadow-hover">
+              <div class="dashboard-card-header">
+                <span class="card-icon">👥</span>
+                <h4>Effectifs & Collaborateurs</h4>
+              </div>
+              <div class="card-stats mt-2">
+                <div class="stat-item">
+                  <span class="stat-number">124</span>
+                  <span class="stat-label">Total Actifs</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">5</span>
+                  <span class="stat-label">En onboarding</span>
+                </div>
+              </div>
+              <p class="text-sm mt-3 text-muted">Registre de tous les collaborateurs, gestion de leurs compétences et avancement de carrière.</p>
+            </div>
+            
+            <!-- stats Skills -->
+            <div class="card-glass shadow-hover">
+              <div class="dashboard-card-header">
+                <span class="card-icon">🎯</span>
+                <h4>Compétences & Talents</h4>
+              </div>
+              <div class="card-stats mt-2">
+                <div class="stat-item">
+                  <span class="stat-number">48</span>
+                  <span class="stat-label">Fiches Compétences</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">84%</span>
+                  <span class="stat-label">Taux de Polyvalence</span>
+                </div>
+              </div>
+              <p class="text-sm mt-3 text-muted">Indicateurs de progression, niveaux d'expertise et polyvalence des équipes sur le terrain.</p>
+            </div>
+
+            <!-- stats Habilitations -->
+            <div class="card-glass shadow-hover border-warning">
+              <div class="dashboard-card-header">
+                <span class="card-icon">📜</span>
+                <h4>Habilitations critiques</h4>
+              </div>
+              <div class="card-stats mt-2">
+                <div class="stat-item">
+                  <span class="stat-number text-warning">4</span>
+                  <span class="stat-label">Expirations proches</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">18</span>
+                  <span class="stat-label">Certifiés valides</span>
+                </div>
+              </div>
+              <p class="text-sm mt-3 text-muted">Certifications et accréditations obligatoires. Alertes en cas d'expiration imminente.</p>
+            </div>
+
+            <!-- stats Formations -->
+            <div class="card-glass shadow-hover">
+              <div class="dashboard-card-header">
+                <span class="card-icon">🎓</span>
+                <h4>Formations & E-learning</h4>
+              </div>
+              <div class="card-stats mt-2">
+                <div class="stat-item">
+                  <span class="stat-number">€12.5k</span>
+                  <span class="stat-label">Budget alloué</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">92%</span>
+                  <span class="stat-label">Taux de satisfaction</span>
+                </div>
+              </div>
+              <p class="text-sm mt-3 text-muted">Suivi des cours de formation, validations des compétences acquises et satisfaction.</p>
+            </div>
           </div>
 
-          <!-- Pagination details -->
-          <div class="pagination-wrapper mt-3">
-            <span class="text-muted text-sm">{{ t('pagination_showing').replace('{length}', '' + filteredEmployees().length).replace('{total}', '' + totalEmployeesCount) }}</span>
-            <div class="pagination-buttons">
-              <button class="btn btn-secondary btn-xs" disabled>&lt;</button>
-              <button class="btn btn-primary btn-xs">1</button>
-              <button class="btn btn-secondary btn-xs" disabled>&gt;</button>
+          <!-- employees listing details -->
+          <div class="card-glass mt-4">
+            <div class="pane-header">
+              <div class="pane-header-left">
+                <h3>Collaborateurs & Évaluations de compétences</h3>
+                <p class="text-muted text-sm mt-1">Liste détaillée des collaborateurs et leur niveau d'expertise principal.</p>
+              </div>
+              <div class="pane-header-right">
+                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearch()" [placeholder]="t('search_placeholder')" class="form-input search-box select-inline" />
+                <button class="btn btn-secondary btn-sm" (click)="onExportReport()" [disabled]="isExporting()">
+                  <span *ngIf="isExporting()">⏳ Exportation...</span>
+                  <span *ngIf="!isExporting()">📥 Exporter</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="table-container mt-3">
+              <table class="premium-table">
+                <thead>
+                  <tr>
+                    <th>Collaborateur</th>
+                    <th>Société</th>
+                    <th>Poste occupé</th>
+                    <th>Compétence Clé</th>
+                    <th>Habilitation</th>
+                    <th>Échéance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let emp of filteredEmployees()">
+                    <td>
+                      <div class="employee-cell">
+                        <span class="emp-avatar">👤</span>
+                        <div>
+                          <strong>{{ emp.name }}</strong>
+                          <span class="text-muted text-xs block">{{ emp.email }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span class="badge badge-primary">{{ emp.company }}</span></td>
+                    <td>{{ emp.role }}</td>
+                    <td>
+                      <div class="skill-indicator-wrapper">
+                        <span>{{ emp.skill }}</span>
+                        <span class="skill-stars">{{ '★'.repeat(emp.skillLevel) }}{{ '☆'.repeat(5 - emp.skillLevel) }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [class.badge-success]="emp.habStatus === 'ok'" [class.badge-warning]="emp.habStatus === 'warning'">
+                        {{ emp.habilitation }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="text-sm font-semibold" [class.text-warning]="emp.habStatus === 'warning'">
+                        {{ emp.habExp }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pagination-wrapper mt-3">
+              <span class="text-muted text-sm">{{ t('pagination_showing').replace('{length}', '' + filteredEmployees().length).replace('{total}', '' + totalEmployeesCount) }}</span>
+              <div class="pagination-buttons">
+                <button class="btn btn-secondary btn-xs" disabled>&lt;</button>
+                <button class="btn btn-primary btn-xs">1</button>
+                <button class="btn btn-secondary btn-xs" disabled>&gt;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <!-- 9. TAB: EVALUATION CAMPAIGNS (RH & SETUP VIEW) -->
+        <div *ngIf="activeTab() === 'evaluation-campaigns'" class="tab-pane-layout-vertical animate-fade">
+          
+          <!-- Campaign System Alert Trigger Bar -->
+          <div class="card-glass flex-row-between-mobile border-warning p-3 mb-4">
+            <div>
+              <h4 class="text-warning">🔔 Système d'Alertes & Relances (US 03.2)</h4>
+              <p class="text-xs text-muted mt-1">Exécutez manuellement la vérification des échéances J-7, J-1 et les relances de retard pour envoyer les notifications système.</p>
+            </div>
+            <button type="button" class="btn btn-warning btn-sm" (click)="onCheckCampaignAlerts()">
+              ⚡ Simuler et lancer les relances (J-7, J-1, Retards)
+            </button>
+          </div>
+
+          <div class="tab-pane-layout animate-fade">
+            <!-- Left Panel: Campaign Scheduler -->
+            <div class="pane-left card-glass">
+              <div class="pane-header">
+                <h3>Campagnes d'Évaluations</h3>
+                <button class="btn btn-primary btn-sm" (click)="onOpenCampaignCreate()">+ Planifier</button>
+              </div>
+
+              <!-- Floating Dialog for Campaign Scheduler -->
+              <p-dialog [header]="isCreatingCampaign() ? '📅 Planifier une nouvelle campagne' : '✏️ Modifier la campagne'" [visible]="isCreatingCampaign() || isEditingCampaign()" (onHide)="onCancelCampaignForm()" [modal]="true" [draggable]="false" [resizable]="false" styleClass="modal-card">
+                <form (submit)="onSaveCampaign($event)" class="mt-2">
+                  <div class="form-group">
+                    <label class="form-label">Dénomination de la campagne</label>
+                    <input type="text" pInputText [(ngModel)]="campaignFormModel.name" name="cName" class="form-input" required placeholder="e.g. Campagne Annuelle 2026" />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group col">
+                      <label class="form-label">Périodicité / Fréquence</label>
+                      <p-dropdown [options]="frequencies" [(ngModel)]="campaignFormModel.frequency" name="cFreq" optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+                    </div>
+                    <div class="form-group col">
+                      <label class="form-label">Statut</label>
+                      <p-dropdown [options]="campaignStatuses" [(ngModel)]="campaignFormModel.status" name="cStatus" optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+                    </div>
+                  </div>
+                  <div class="form-row mt-3">
+                    <div class="form-group col">
+                      <label class="form-label">Date de début</label>
+                      <p-datepicker [(ngModel)]="campaignFormModel.startDate" name="cStart" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full"></p-datepicker>
+                    </div>
+                    <div class="form-group col">
+                      <label class="form-label">Date de clôture</label>
+                      <p-datepicker [(ngModel)]="campaignFormModel.endDate" name="cEnd" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full"></p-datepicker>
+                    </div>
+                  </div>
+                  <div class="form-actions mt-4 border-t pt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="onCancelCampaignForm()">Annuler</button>
+                  </div>
+                </form>
+              </p-dialog>
+
+              <!-- Campaigns List -->
+              <div class="table-container mt-3">
+                <table class="premium-table-inner text-xs">
+                  <thead>
+                    <tr>
+                      <th>Campagne</th>
+                      <th>Fréquence</th>
+                      <th>Dates</th>
+                      <th>Statut</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let c of campaignsList()" [class.selected-row]="c.id === selectedCampaignId()">
+                      <td>
+                        <a (click)="selectedCampaignId.set(c.id || null); loadCampaignEvaluations()" class="cursor-pointer font-bold hover-primary">
+                          {{ c.name }}
+                        </a>
+                      </td>
+                      <td>{{ c.frequency }}</td>
+                      <td>Du {{ formatExpiryDate(c.startDate) }}<br/>au {{ formatExpiryDate(c.endDate) }}</td>
+                      <td>
+                        <span class="badge" [class.badge-success]="c.status === 'EN_COURS'" [class.badge-warning]="c.status === 'PLANIFIEE'" [class.badge-danger]="c.status === 'CLOTUREE' || c.status === 'EN_RETARD'">
+                          {{ c.status }}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn btn-secondary btn-xs p-1" (click)="onEditCampaign(c)">✏️</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right Panel: Gap Analysis Dashboard -->
+            <div class="pane-right card-glass">
+              <div class="pane-header">
+                <h3>📊 Suivi des Évaluations & Risques Majeurs (US 03.5)</h3>
+                <div class="campaign-selector-inline" *ngIf="campaignsList().length > 0">
+                  <select [ngModel]="selectedCampaignId()" (ngModelChange)="selectedCampaignId.set($event); loadCampaignEvaluations()" class="form-select select-sm select-inline">
+                    <option *ngFor="let c of campaignsList()" [value]="c.id">{{ c.name }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <p-table [value]="evaluationsList()" [paginator]="true" [rows]="10" styleClass="p-datatable-striped" [tableStyle]="{'min-width': '50rem'}">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th pSortableColumn="employeeName">Collaborateur <p-sortIcon field="employeeName"></p-sortIcon></th>
+                      <th pSortableColumn="status">Statut <p-sortIcon field="status"></p-sortIcon></th>
+                      <th pSortableColumn="globalScore">Score Global <p-sortIcon field="globalScore"></p-sortIcon></th>
+                      <th pSortableColumn="majorRisk">Indicateur Risque <p-sortIcon field="majorRisk"></p-sortIcon></th>
+                      <th>Actions</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-ev>
+                    <tr>
+                      <td>
+                        <strong>{{ ev.employeeName }}</strong>
+                        <span class="text-xs text-muted block">{{ ev.employeeEmail }}</span>
+                      </td>
+                      <td>
+                        <span class="badge" [class.badge-secondary]="ev.status === 'CREEE'" [class.badge-primary]="ev.status === 'AUTO_EVALUATION'" [class.badge-warning]="ev.status === 'ARBITRAGE'" [class.badge-success]="ev.status === 'TERMINEE'">
+                          {{ ev.status }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="score-progress-wrapper" *ngIf="ev.status === 'TERMINEE' || ev.status === 'ARBITRAGE'">
+                          <div class="score-text">{{ ev.globalScore }}%</div>
+                          <div class="score-progress-bar-container">
+                            <div class="score-progress-bar" [style.width.%]="ev.globalScore" [class.progress-success]="ev.globalScore >= 80" [class.progress-warning]="ev.globalScore < 80 && ev.globalScore >= 50" [class.progress-danger]="ev.globalScore < 50"></div>
+                          </div>
+                        </div>
+                        <span class="text-muted text-xs" *ngIf="ev.status !== 'TERMINEE' && ev.status !== 'ARBITRAGE'">Non calculé</span>
+                      </td>
+                      <td>
+                        <span *ngIf="ev.majorRisk" class="badge badge-danger blink-alert" title="Alerte : Le niveau acquis de compétences critiques ou obligatoires est trop bas par rapport aux requis !">
+                          🚨 RISQUE MAJEUR
+                        </span>
+                        <span *ngIf="!ev.majorRisk && (ev.status === 'TERMINEE' || ev.status === 'ARBITRAGE')" class="badge badge-success">Conforme</span>
+                        <span *ngIf="ev.status !== 'TERMINEE' && ev.status !== 'ARBITRAGE'" class="text-muted text-xs">En attente d'évaluation</span>
+                      </td>
+                      <td>
+                        <button class="btn btn-secondary btn-xs mx-1" (click)="onViewEvaluation(ev)">🔍 Consulter</button>
+                        <button *ngIf="ev.status === 'ARBITRAGE'" class="btn btn-primary btn-xs mx-1" (click)="onStartArbitrage(ev)">⚖️ Arbitrer</button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">Aucune évaluation générée pour cette campagne. Assurez-vous qu'elle est "En cours".</td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10. TAB: SKILLS EVALUATION (SELF & MANAGER RUN VIEW) -->
+        <div *ngIf="activeTab() === 'skills-evaluation'" class="tab-pane-layout-vertical animate-fade">
+          
+          <!-- Grid for Self and Team Evaluations -->
+          <div class="modules-dashboard-grid mb-4">
+            
+            <!-- Widget: Self evaluations -->
+            <div class="card-glass">
+              <h3>Mes Auto-évaluations</h3>
+              <p class="text-xs text-muted mt-1">Consultez et remplissez vos fiches d'auto-évaluation de compétences.</p>
+              
+              <div class="table-container mt-2">
+                <table class="premium-table-inner text-xs">
+                  <thead>
+                    <tr>
+                      <th>Campagne</th>
+                      <th>Statut</th>
+                      <th>Global Score</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let ev of selfEvaluationsList()">
+                      <td><strong>{{ ev.campaignName }}</strong></td>
+                      <td>
+                        <span class="badge" [class.badge-secondary]="ev.status === 'CREEE'" [class.badge-primary]="ev.status === 'AUTO_EVALUATION'" [class.badge-warning]="ev.status === 'ARBITRAGE'" [class.badge-success]="ev.status === 'TERMINEE'">
+                          {{ ev.status }}
+                        </span>
+                      </td>
+                      <td>
+                        <span *ngIf="ev.status === 'TERMINEE'">{{ ev.globalScore }}%</span>
+                        <span *ngIf="ev.status !== 'TERMINEE'" class="text-muted">-</span>
+                      </td>
+                      <td>
+                        <button *ngIf="ev.status === 'CREEE' || ev.status === 'AUTO_EVALUATION'" class="btn btn-primary btn-xs" (click)="onStartSelfEvaluation(ev)">📝 Évaluer</button>
+                        <button class="btn btn-secondary btn-xs" (click)="onViewEvaluation(ev)">🔍 Consulter</button>
+                      </td>
+                    </tr>
+                    <tr *ngIf="selfEvaluationsList().length === 0">
+                      <td colspan="4" class="text-center text-muted py-2 text-xxs">Aucune fiche d'auto-évaluation active.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Widget: Team Arbitrage (N+1 Manager View) -->
+            <div class="card-glass">
+              <h3>⚖️ Arbitrage de mon équipe (Manager N+1)</h3>
+              <p class="text-xs text-muted mt-1">Finalisez l'arbitrage des compétences de vos collaborateurs directs.</p>
+
+              <div class="table-container mt-2">
+                <table class="premium-table-inner text-xs">
+                  <thead>
+                    <tr>
+                      <th>Collaborateur</th>
+                      <th>Statut</th>
+                      <th>Alerte Risque</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let ev of teamEvaluationsList()">
+                      <td>
+                        <strong>{{ ev.employeeName }}</strong>
+                        <span class="text-xxs text-muted block">{{ ev.campaignName }}</span>
+                      </td>
+                      <td>
+                        <span class="badge" [class.badge-secondary]="ev.status === 'CREEE'" [class.badge-primary]="ev.status === 'AUTO_EVALUATION'" [class.badge-warning]="ev.status === 'ARBITRAGE'" [class.badge-success]="ev.status === 'TERMINEE'">
+                          {{ ev.status }}
+                        </span>
+                      </td>
+                      <td>
+                        <span *ngIf="ev.majorRisk" class="badge badge-danger" title="Risque Majeur détecté !">🚨 Risque</span>
+                        <span *ngIf="!ev.majorRisk && ev.status === 'TERMINEE'" class="badge badge-success">OK</span>
+                        <span *ngIf="ev.status !== 'TERMINEE'" class="text-muted">-</span>
+                      </td>
+                      <td>
+                        <button *ngIf="ev.status === 'ARBITRAGE'" class="btn btn-primary btn-xs" (click)="onStartArbitrage(ev)">⚖️ Arbitrer</button>
+                        <button class="btn btn-secondary btn-xs" (click)="onViewEvaluation(ev)">🔍 Consulter</button>
+                      </td>
+                    </tr>
+                    <tr *ngIf="teamEvaluationsList().length === 0">
+                      <td colspan="4" class="text-center text-muted py-2 text-xxs">Aucune évaluation de collaborateur en cours pour votre équipe.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- A. Self Evaluation p-dialog -->
+          <p-dialog header="📝 Renseigner mon Auto-Évaluation" [visible]="isEvaluatingSelf() && selectedEvaluation() !== null" (onHide)="onCancelEvaluationForms()" [modal]="true" [draggable]="false" [resizable]="false" styleClass="modal-card">
+            <form (submit)="onSaveSelfEvaluation($event)">
+              <div class="alert-box-info mb-3">
+                Campagne : <strong>{{ selectedEvaluation()?.campaignName }}</strong> | Collaborateur : <strong>{{ selectedEvaluation()?.employeeName }}</strong>
+              </div>
+
+              <!-- Grid of skills self levels selection -->
+              <div class="table-container mb-3">
+                <table class="premium-table-inner text-xs">
+                  <thead>
+                    <tr>
+                      <th>Compétence</th>
+                      <th>Attendu</th>
+                      <th>Votre auto-évaluation (Niveau 1 à 4)</th>
+                      <th>Requis</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let s of evaluationSelfFormModel.skills; let idx = index">
+                      <td>
+                        <strong>{{ s.skillName }}</strong>
+                        <span class="text-xxs text-muted block">{{ s.skillDescription }}</span>
+                      </td>
+                      <td><span class="badge badge-outline-primary">Niveau {{ s.expectedLevel }}</span></td>
+                      <td>
+                        <div class="flex-row-center gap-2">
+                          <p-slider [(ngModel)]="s.selfLevel" [name]="'selfLevel_' + idx" [min]="1" [max]="4" styleClass="w-32"></p-slider>
+                          <span class="level-badge font-bold">Niveau {{ s.selfLevel }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span *ngIf="s.mandatory" class="badge badge-danger">Requis</span>
+                        <span *ngIf="!s.mandatory" class="badge badge-secondary">Optionnel</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Vos commentaires sur l'année</label>
+                <textarea pInputTextarea [(ngModel)]="evaluationSelfFormModel.selfComment" name="selfComment" class="form-textarea" rows="3" placeholder="Décrivez vos succès et axes d'amélioration..."></textarea>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Souhait / Thème de formation demandé</label>
+                <input type="text" pInputText [(ngModel)]="evaluationSelfFormModel.trainingRequest" name="trainingReq" class="form-input" placeholder="e.g. Formation Lead Auditor, Sensibilisation technique SecOps" />
+              </div>
+
+              <div class="form-actions mt-4 border-t pt-3">
+                <button type="submit" class="btn btn-primary">📤 Transmettre au Manager (N+1)</button>
+                <button type="button" class="btn btn-secondary" (click)="onCancelEvaluationForms()">Annuler</button>
+              </div>
+            </form>
+          </p-dialog>
+
+          <!-- B. Manager Arbitrage p-dialog -->
+          <p-dialog header="⚖️ Arbitrage de l'Évaluation" [visible]="isEvaluatingArbitrage() && selectedEvaluation() !== null" (onHide)="onCancelEvaluationForms()" [modal]="true" [draggable]="false" [resizable]="false" styleClass="modal-card">
+            <form (submit)="onSaveArbitrage($event)">
+              <div class="alert-box-info mb-3">
+                Collaborateur : <strong>{{ selectedEvaluation()?.employeeName }}</strong> | Campagne : <strong>{{ selectedEvaluation()?.campaignName }}</strong>
+              </div>
+
+              <!-- Grid of skills arbitrage with Gap Analysis calculation -->
+              <div class="table-container mb-3">
+                <table class="premium-table-inner text-xs">
+                  <thead>
+                    <tr>
+                      <th>Compétence</th>
+                      <th>Attendu</th>
+                      <th>Note Auto (Collaborateur)</th>
+                      <th>Note Validée N+1 (Niveau 1 à 4)</th>
+                      <th>Écart / Gap</th>
+                      <th>Commentaire Manager par compétence</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let s of evaluationArbitrageFormModel.skills; let idx = index">
+                      <td>
+                        <strong>{{ s.skillName }}</strong>
+                        <span *ngIf="s.mandatory" class="badge badge-danger text-xxs ml-1">Requis</span>
+                      </td>
+                      <td><span class="badge badge-outline-primary">Niveau {{ s.expectedLevel }}</span></td>
+                      <td><span class="badge badge-secondary">Niveau {{ s.selfLevel || 'N/A' }}</span></td>
+                      <td>
+                        <div class="flex-row-center gap-2">
+                          <p-slider [(ngModel)]="s.acquiredLevel" [name]="'acqLevel_' + idx" [min]="1" [max]="4" styleClass="w-32"></p-slider>
+                          <span class="level-badge font-bold">Niveau {{ s.acquiredLevel }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge" [class.badge-success]="s.acquiredLevel >= s.expectedLevel" [class.badge-danger]="s.acquiredLevel < s.expectedLevel">
+                          {{ s.acquiredLevel - s.expectedLevel >= 0 ? '+' : '' }}{{ s.acquiredLevel - s.expectedLevel }}
+                        </span>
+                        <span *ngIf="s.acquiredLevel < s.expectedLevel && s.mandatory" class="badge badge-danger text-xxs block mt-1">🚨 RISQUE MAJEUR</span>
+                      </td>
+                      <td>
+                        <input type="text" pInputText [(ngModel)]="s.managerComment" [name]="'mgrComment_' + idx" class="form-input input-xs" placeholder="Remarques..." />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Commentaire d'évaluation global du Manager</label>
+                <textarea pInputTextarea [(ngModel)]="evaluationArbitrageFormModel.managerComment" name="mgrCommentGlobal" class="form-textarea" rows="3" placeholder="Bilan annuel global..."></textarea>
+              </div>
+
+              <div class="form-group mb-3">
+                <label class="form-label">Thème de formation recommandé / Action corrective</label>
+                <input type="text" pInputText [(ngModel)]="evaluationArbitrageFormModel.trainingRecommendation" name="trainingRec" class="form-input" placeholder="e.g. Inscription à la prochaine session ISO 27001 Auditor" />
+              </div>
+
+              <div class="form-actions mt-4 border-t pt-3">
+                <button type="submit" class="btn btn-primary">💾 Finaliser & Valider Définitivement</button>
+                <button type="button" class="btn btn-secondary" (click)="onCancelEvaluationForms()">Annuler</button>
+              </div>
+            </form>
+          </p-dialog>
+
+          <!-- C. Read-Only Detailed Evaluation p-dialog -->
+          <p-dialog header="🔍 Détails de l'Évaluation Individuelle" [visible]="isViewingEvaluation() && selectedEvaluation() !== null" (onHide)="onCancelEvaluationForms()" [modal]="true" [draggable]="false" [resizable]="false" styleClass="modal-card">
+            <div class="alert-box-info flex-row-between-mobile mb-3">
+              <div>
+                Collaborateur : <strong>{{ selectedEvaluation()?.employeeName }}</strong> | Campagne : <strong>{{ selectedEvaluation()?.campaignName }}</strong>
+              </div>
+              <div class="badge" [class.badge-secondary]="selectedEvaluation()?.status === 'CREEE'" [class.badge-primary]="selectedEvaluation()?.status === 'AUTO_EVALUATION'" [class.badge-warning]="selectedEvaluation()?.status === 'ARBITRAGE'" [class.badge-success]="selectedEvaluation()?.status === 'TERMINEE'">
+                {{ selectedEvaluation()?.status }}
+              </div>
+            </div>
+
+            <!-- Dynamic metrics: Global Score & Major Risk visual indicators -->
+            <div class="metrics-premium-row mb-4" *ngIf="selectedEvaluation()?.status === 'TERMINEE' || selectedEvaluation()?.status === 'ARBITRAGE'">
+              <div class="metric-widget card-glass">
+                <h4>Score de Conformité Global</h4>
+                <div class="widget-value text-primary mt-2">{{ selectedEvaluation()?.globalScore }}%</div>
+                <div class="score-progress-bar-container mt-2">
+                  <p-progressBar [value]="selectedEvaluation()?.globalScore" [showValue]="false" styleClass="w-full"></p-progressBar>
+                </div>
+              </div>
+              <div class="metric-widget card-glass">
+                <h4>Statut d'Alerte Entreprise</h4>
+                <div class="widget-value mt-2">
+                  <span *ngIf="selectedEvaluation()?.majorRisk" class="badge badge-danger blink-alert p-2 text-sm font-bold">🚨 RISQUE MAJEUR</span>
+                  <span *ngIf="!selectedEvaluation()?.majorRisk" class="badge badge-success p-2 text-sm font-bold">✅ CONFORME</span>
+                </div>
+                <p class="text-xs text-muted mt-2">Le Risque Majeur se déclenche si une compétence obligatoire ou critique possède un niveau acquis inférieur au requis.</p>
+              </div>
+            </div>
+
+            <div class="table-container mb-3">
+              <table class="premium-table-inner text-xs">
+                <thead>
+                  <tr>
+                    <th>Compétence</th>
+                    <th>Attendu</th>
+                    <th>Auto-évaluation</th>
+                    <th>Niveau Acquis (Manager)</th>
+                    <th>Écart / Gap</th>
+                    <th>Remarques</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let s of selectedEvaluation()?.skills">
+                    <td>
+                      <strong>{{ s.skillName }}</strong>
+                      <span *ngIf="s.mandatory" class="badge badge-danger text-xxs ml-1">Requis</span>
+                    </td>
+                    <td><span class="badge badge-outline-primary">Niveau {{ s.expectedLevel }}</span></td>
+                    <td><span class="badge badge-secondary">Niveau {{ s.selfLevel || 'Non noté' }}</span></td>
+                    <td><span class="badge badge-success">Niveau {{ s.acquiredLevel || 'Non arbitré' }}</span></td>
+                    <td>
+                      <span *ngIf="s.acquiredLevel !== undefined" class="badge" [class.badge-success]="s.acquiredLevel >= s.expectedLevel" [class.badge-danger]="s.acquiredLevel < s.expectedLevel">
+                        {{ s.acquiredLevel - s.expectedLevel >= 0 ? '+' : '' }}{{ s.acquiredLevel - s.expectedLevel }}
+                      </span>
+                      <span *ngIf="s.acquiredLevel === undefined" class="text-muted">-</span>
+                    </td>
+                    <td>{{ s.managerComment || 'Aucun commentaire' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="form-row border-t pt-3 mt-3">
+              <div class="form-group col card-glass-inner p-3">
+                <strong class="text-xs block text-muted mb-1">Commentaire Auto-Évaluation (Collaborateur) :</strong>
+                <p class="text-sm italic">{{ selectedEvaluation()?.selfComment || 'Aucun commentaire' }}</p>
+                <div class="mt-2 text-xs text-muted"><strong>Demande de formation :</strong> {{ selectedEvaluation()?.trainingRequest || 'Aucune' }}</div>
+              </div>
+              <div class="form-group col card-glass-inner p-3" *ngIf="selectedEvaluation()?.status === 'TERMINEE'">
+                <strong class="text-xs block text-muted mb-1">Commentaire Final (N+1 Manager) :</strong>
+                <p class="text-sm italic">{{ selectedEvaluation()?.managerComment || 'Aucun commentaire' }}</p>
+                <div class="mt-2 text-xs text-muted"><strong>Recommandation de formation :</strong> {{ selectedEvaluation()?.trainingRecommendation || 'Aucune' }}</div>
+              </div>
+            </div>
+
+            <div class="form-actions mt-4 border-t pt-3">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="onCancelEvaluationForms()">Fermer</button>
+            </div>
+          </p-dialog>
+
+        </div>
+
+        <!-- 11. TAB: CERTIFICATIONS & HABILITATIONS -->
+        <div *ngIf="activeTab() === 'certifications'" class="tab-pane-layout-vertical animate-fade">
+          <div class="card-glass">
+            <div class="pane-header flex-column-mobile">
+              <div>
+                <h3>📜 Registre de Suivi des Certifications & Habilitations</h3>
+                <p class="text-sm text-muted">Contrôlez les habilitations réglementaires, les validités et recevez des alertes automatiques avant expiration.</p>
+              </div>
+            </div>
+
+            <!-- Habilitations summary metrics -->
+            <div class="metrics-premium-row mt-3 mb-3">
+              <div class="metric-widget card-glass">
+                <h4>Habilitations Critiques Totales</h4>
+                <div class="widget-value text-primary mt-2">
+                  {{ adminService.employees().length }} actives
+                </div>
+              </div>
+              <div class="metric-widget card-glass border-warning">
+                <h4>Expirations Proches (&lt; 90 jours)</h4>
+                <div class="widget-value text-warning mt-2">
+                  {{ upcomingHabilitationExpirationsCount() }} alertes
+                </div>
+              </div>
+            </div>
+
+            <!-- List table of all employee certifications & validities -->
+            <div class="mt-3">
+              <p-table [value]="adminService.employees()" [paginator]="true" [rows]="10" styleClass="p-datatable-striped" [tableStyle]="{'min-width': '40rem'}">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="lastName">Collaborateur <p-sortIcon field="lastName"></p-sortIcon></th>
+                    <th pSortableColumn="habilitationName">Désignation Habilitation <p-sortIcon field="habilitationName"></p-sortIcon></th>
+                    <th pSortableColumn="habilitationExpiryDate">Date d'Échéance <p-sortIcon field="habilitationExpiryDate"></p-sortIcon></th>
+                    <th>Statut de Validité</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-emp>
+                  <tr>
+                    <td>
+                      <strong>{{ emp.firstName }} {{ emp.lastName }}</strong>
+                      <span class="text-xs text-muted block">{{ emp.email }}</span>
+                    </td>
+                    <td>
+                      <span class="badge badge-primary">
+                        {{ emp.habilitationName || 'Aucune habilitation active' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="text-sm font-semibold" [class.text-warning]="getHabStatus(emp.habilitationExpiryDate) === 'warning'">
+                        {{ emp.habilitationExpiryDate ? formatExpiryDate(emp.habilitationExpiryDate) : 'N/A' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span *ngIf="emp.habilitationExpiryDate" class="badge" [class.badge-success]="getHabStatus(emp.habilitationExpiryDate) === 'ok'" [class.badge-warning]="getHabStatus(emp.habilitationExpiryDate) === 'warning'">
+                        {{ getHabStatus(emp.habilitationExpiryDate) === 'warning' ? '⚠️ Expiration Proche' : '✅ Valide' }}
+                      </span>
+                      <span *ngIf="!emp.habilitationExpiryDate" class="text-muted text-xs">-</span>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="4" class="text-muted text-center py-4">Aucune certification trouvée.</td>
+                  </tr>
+                </ng-template>
+              </p-table>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </main>
 </div>
 
 <!-- CHANGE PASSWORD MODAL OVERLAY -->
-<div class="modal-overlay" *ngIf="showPasswordModal()">
-  <div class="modal-card card-glass profile-pwd-modal">
-    <div class="modal-header border-b pb-2">
-      <h3>🔑 {{ t('pwd_modal_title') }}</h3>
-      <button class="close-btn" (click)="closePasswordModal()">✕</button>
-    </div>
+<p-dialog [header]="t('pwd_modal_title')" [visible]="showPasswordModal()" (onHide)="closePasswordModal()" [modal]="true" [draggable]="false" [resizable]="false" styleClass="profile-pwd-modal">
     <form (submit)="onSavePassword($event)" class="mt-3">
       <!-- A. Saisie du mot de passe actuel -->
       <div class="form-group">
@@ -851,5 +1692,4 @@
         <button type="button" class="btn btn-secondary" (click)="closePasswordModal()">{{ t('btn_cancel') }}</button>
       </div>
     </form>
-  </div>
-</div>
+</p-dialog>

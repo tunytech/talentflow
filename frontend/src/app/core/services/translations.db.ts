@@ -340,6 +340,16 @@ export const TRANSLATIONS: TranslationDict = {
     pl: 'Język aplikacji'
   },
   
+  'col_phone': { fr: 'Téléphone pro', en: 'Professional phone', de: 'Telefon pro', nl: 'Telefoon', it: 'Telefono', es: 'Teléfono', pt: 'Telefone', pl: 'Telefon' },
+  'col_birthdate': { fr: 'Date de naissance', en: 'Date of birth', de: 'Geburtsdatum', nl: 'Geboortedatum', it: 'Data di nascita', es: 'Fecha de nacimiento', pt: 'Data de nascimento', pl: 'Data urodzenia' },
+  'col_gender': { fr: 'Sexe / Genre', en: 'Gender', de: 'Geschlecht', nl: 'Geslacht', it: 'Genere', es: 'Género', pt: 'Gênero', pl: 'Płeć' },
+  'col_manager': { fr: 'Manager N+1', en: 'Manager N+1', de: 'Manager N+1', nl: 'Manager N+1', it: 'Manager N+1', es: 'Gerente N+1', pt: 'Gerente N+1', pl: 'Menedżer N+1' },
+  'col_entrydate': { fr: 'Date d\'entrée', en: 'Entry date', de: 'Eintrittsdatum', nl: 'Indiensttredingsdatum', it: 'Data di ingresso', es: 'Fecha de entrada', pt: 'Data de entrada', pl: 'Data wejścia' },
+  'col_retirementdate': { fr: 'Date de retraite', en: 'Retirement date', de: 'Renteneintrittsdatum', nl: 'Pensioendatum', it: 'Data pensionamento', es: 'Fecha de jubilación', pt: 'Data de aposentadoria', pl: 'Data emerytury' },
+  'col_department': { fr: 'Département / Service', en: 'Department', de: 'Abteilung', nl: 'Afdeling', it: 'Dipartimento', es: 'Departamento', pt: 'Departamento', pl: 'Departament' },
+  'average_age': { fr: 'Moyenne d\'âge active', en: 'Active average age', de: 'Altersdurchschnitt', nl: 'Gemiddelde leeftijd', it: 'Età media', es: 'Edad media', pt: 'Idade média', pl: 'Średni wiek' },
+  'upcoming_departures': { fr: 'Départs retraite proches', en: 'Retirements near', de: 'Renteneintritt', nl: 'Pensioen nadert', it: 'Pensionamenti vicini', es: 'Jubilaciones cercanas', pt: 'Aposentadorias próximas', pl: 'Emerytura blisko' },
+
   // Table columns
   'col_name': {
     fr: 'Nom',
