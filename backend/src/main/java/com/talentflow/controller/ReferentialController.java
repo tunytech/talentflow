@@ -13,6 +13,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/admin/referentials")
 @CrossOrigin(origins = "*")
+@SuppressWarnings("null")
 public class ReferentialController {
 
     @Autowired
