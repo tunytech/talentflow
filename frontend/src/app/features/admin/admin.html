@@ -498,7 +498,7 @@
                   </div>
                   <div class="form-group col">
                     <label class="form-label">Sexe / Genre</label>
-                    <p-dropdown [options]="genderDropdownOptions()" [(ngModel)]="employeeFormModel.gender" name="eGender" styleClass="w-full"></p-dropdown>
+                    <p-select [options]="genderDropdownOptions()" [(ngModel)]="employeeFormModel.gender" name="eGender" styleClass="w-full"></p-select>
                   </div>
                 </div>
 
@@ -507,7 +507,7 @@
                 <div class="form-row">
                   <div class="form-group col">
                     <label class="form-label">Société / Filiale active</label>
-                    <p-dropdown [options]="companyDropdownOptions()" [(ngModel)]="employeeFormModel.companyId" name="eCompany" styleClass="w-full"></p-dropdown>
+                    <p-select [options]="companyDropdownOptions()" [(ngModel)]="employeeFormModel.companyId" name="eCompany" styleClass="w-full"></p-select>
                   </div>
                   <div class="form-group col">
                     <label class="form-label">Département / Service</label>
@@ -518,7 +518,7 @@
                 <div class="form-row mt-3">
                   <div class="form-group col">
                     <label class="form-label">Responsable Hiérarchique N+1</label>
-                    <p-dropdown [options]="managerDropdownOptions()" [(ngModel)]="employeeFormModel.managerId" name="eManager" [showClear]="true" placeholder="Aucun (Niveau de direction)" styleClass="w-full"></p-dropdown>
+                    <p-select [options]="managerDropdownOptions()" [(ngModel)]="employeeFormModel.managerId" name="eManager" [showClear]="true" placeholder="Aucun (Niveau de direction)" styleClass="w-full"></p-select>
                   </div>
                   <div class="form-group col">
                     <label class="form-label">Poste Actuel de Référence</label>
@@ -545,7 +545,7 @@
                       <tbody>
                         <tr *ngFor="let assign of employeeFormModel.postAssignments; let idx = index">
                           <td>
-                            <p-dropdown [options]="jobProfileDropdownOptions()" [(ngModel)]="assign.jobProfile.id" [name]="'assignJp_' + idx" styleClass="w-full p-dropdown-xs"></p-dropdown>
+                            <p-select [options]="jobProfileDropdownOptions()" [(ngModel)]="assign.jobProfile.id" [name]="'assignJp_' + idx" styleClass="w-full p-dropdown-xs"></p-select>
                           </td>
                           <td>
                             <p-datepicker [(ngModel)]="assign.startDate" [name]="'assignStart_' + idx" [showIcon]="true" dateFormat="yy-mm-dd" dataType="string" styleClass="w-full p-calendar-xs"></p-datepicker>
@@ -603,7 +603,7 @@
                   </div>
                   <div class="form-group col">
                     <label class="form-label">Niveau de Compétence Référencé</label>
-                    <p-dropdown [options]="skillLevels" [(ngModel)]="employeeFormModel.skillLevel" name="eSkillLevel" styleClass="w-full"></p-dropdown>
+                    <p-select [options]="skillLevels" [(ngModel)]="employeeFormModel.skillLevel" name="eSkillLevel" styleClass="w-full"></p-select>
                   </div>
                 </div>
 
@@ -1090,11 +1090,11 @@
                   <div class="form-row">
                     <div class="form-group col">
                       <label class="form-label">Périodicité / Fréquence</label>
-                      <p-dropdown [options]="frequencies" [(ngModel)]="campaignFormModel.frequency" name="cFreq" optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+                      <p-select [options]="frequencies" [(ngModel)]="campaignFormModel.frequency" name="cFreq" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
                     </div>
                     <div class="form-group col">
                       <label class="form-label">Statut</label>
-                      <p-dropdown [options]="campaignStatuses" [(ngModel)]="campaignFormModel.status" name="cStatus" optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+                      <p-select [options]="campaignStatuses" [(ngModel)]="campaignFormModel.status" name="cStatus" optionLabel="label" optionValue="value" styleClass="w-full"></p-select>
                     </div>
                   </div>
                   <div class="form-row mt-3">
@@ -1446,7 +1446,7 @@
                 <h4>Score de Conformité Global</h4>
                 <div class="widget-value text-primary mt-2">{{ selectedEvaluation()?.globalScore }}%</div>
                 <div class="score-progress-bar-container mt-2">
-                  <p-progressBar [value]="selectedEvaluation()?.globalScore" [showValue]="false" styleClass="w-full"></p-progressBar>
+                  <p-progressbar [value]="selectedEvaluation()?.globalScore" [showValue]="false" styleClass="w-full"></p-progressbar>
                 </div>
               </div>
               <div class="metric-widget card-glass">
