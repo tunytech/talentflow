@@ -12,6 +12,7 @@ import java.time.LocalDate;
 
 @Component
 @Order(2)
+@SuppressWarnings("null")
 public class SkillsReferentialInitializer implements CommandLineRunner {
 
     @Autowired
@@ -64,7 +65,7 @@ public class SkillsReferentialInitializer implements CommandLineRunner {
         Skill angular = saveSkill(company, tech, "Angular", "Développement frontend Angular", 4, SkillCriticality.HIGH);
         Skill devops = saveSkill(company, tech, "DevOps", "CI/CD et infrastructure cloud", 3, SkillCriticality.MEDIUM);
         Skill iso = saveSkill(company, quality, "ISO 27001", "Sécurité de l'information", 4, SkillCriticality.HIGH);
-        Skill capa = saveSkill(company, quality, "Qualité CAPA", "Actions correctives et préventives", 3, SkillCriticality.MEDIUM);
+        saveSkill(company, quality, "Qualité CAPA", "Actions correctives et préventives", 3, SkillCriticality.MEDIUM);
         Skill leadership = saveSkill(company, mgmt, "Leadership", "Animation et motivation d'équipe", 3, SkillCriticality.MEDIUM);
         Skill communication = saveSkill(company, soft, "Communication client", "Relation client et présentation", 3, SkillCriticality.MEDIUM);
 

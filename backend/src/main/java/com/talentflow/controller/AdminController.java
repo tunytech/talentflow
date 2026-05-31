@@ -12,6 +12,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*") // Allows easy integration with Angular dev server
+@SuppressWarnings("null")
 public class AdminController {
 
     @Autowired
@@ -32,8 +33,7 @@ public class AdminController {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private EmployeePostAssignmentRepository employeePostAssignmentRepository;
+
 
     @Autowired
     private EmailAlertConfigRepository emailAlertConfigRepository;
